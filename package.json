@@ -1,0 +1,20 @@
+{
+  "name": "silvi",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Minimal, fast agent library for any OpenAI-compatible API",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tools": "./tools/index.ts"
+  },
+  "scripts": {
+    "example": "bun run examples/basic.ts",
+    "serve":   "bun run src/server.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "keywords": ["agent", "llm", "openai", "openrouter", "groq", "bun"],
+  "license": "MIT"
+}
