@@ -1,6 +1,6 @@
 // Relational SQLite Persistence Adapter
 // Saves and loads MemorySnapshot using Bun's native sqlite client.
-// Normalized tables allow external analytics and direct SQL FTS querying natively!
+// v1.1: Added user_id scoping to all tables to support multi-tenant deployments.
 
 import { Database } from 'bun:sqlite'
 import type { MemoryPersist, MemorySnapshot, MemoryNode, FactCategory } from '../types.ts'
@@ -14,13 +14,13 @@ export class SQLiteAdapter implements MemoryPersist {
   }
 
   private init() {
-    // We use WAL mode for max performance
     this.db.exec('PRAGMA journal_mode = WAL;')
 
-    // Relational tables instead of JSON blobs for easy external queries
+    // Added user_id to both tables for isolation
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS ltm_nodes (
         id TEXT PRIMARY KEY,
+        user_id TEXT,
         content TEXT NOT NULL,
         category TEXT NOT NULL,
         importance REAL NOT NULL,
@@ -33,6 +33,7 @@ export class SQLiteAdapter implements MemoryPersist {
 
       CREATE TABLE IF NOT EXISTS stm_summaries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
         content TEXT NOT NULL
       );
     `)
@@ -40,22 +41,22 @@ export class SQLiteAdapter implements MemoryPersist {
 
   async save(snapshot: MemorySnapshot): Promise<void> {
     const insertLtm = this.db.prepare(`
-      INSERT INTO ltm_nodes (id, content, category, importance, created_at, last_accessed_at, access_count, tags, source) 
-      VALUES ($id, $content, $category, $importance, $created_at, $last_accessed_at, $access_count, $tags, $source)
+      INSERT INTO ltm_nodes (id, user_id, content, category, importance, created_at, last_accessed_at, access_count, tags, source) 
+      VALUES ($id, $user_id, $content, $category, $importance, $created_at, $last_accessed_at, $access_count, $tags, $source)
       ON CONFLICT(id) DO UPDATE SET 
         importance = $importance,
         last_accessed_at = $last_accessed_at,
         access_count = $access_count
     `)
 
-    const insertStm = this.db.prepare(`INSERT INTO stm_summaries (content) VALUES ($content)`)
+    const insertStm = this.db.prepare(`INSERT INTO stm_summaries (user_id, content) VALUES ($user_id, $content)`)
 
-    // Database transaction to ensure atomic saves
     const transaction = this.db.transaction(() => {
-      // 1. Sync LTM nodes (Insert or Update)
+      // 1. Sync LTM nodes
       for (const node of snapshot.ltm) {
         insertLtm.run({
           $id: node.id,
+          $user_id: node.userId ?? null,
           $content: node.content,
           $category: node.category,
           $importance: node.importance,
@@ -67,11 +68,21 @@ export class SQLiteAdapter implements MemoryPersist {
         })
       }
 
-      // 2. Sync STM Summaries 
-      // Because STM is a sliding window, we simply clear the table and insert the active window
-      this.db.exec('DELETE FROM stm_summaries;')
+      // 2. Sync STM Summaries
+      // If snapshot.userId is provided, we only purge and sync that user.
+      // If it's a global sync, we handle accordingly.
+      if (snapshot.userId) {
+        const del = this.db.prepare('DELETE FROM stm_summaries WHERE user_id = ?')
+        del.run(snapshot.userId)
+      } else {
+        this.db.exec('DELETE FROM stm_summaries;')
+      }
+
       for (const summary of snapshot.stmSummaries) {
-        insertStm.run({ $content: summary })
+        insertStm.run({ 
+          $user_id: snapshot.userId ?? null, 
+          $content: summary 
+        })
       }
     })
 
@@ -80,10 +91,11 @@ export class SQLiteAdapter implements MemoryPersist {
 
   async load(): Promise<MemorySnapshot | null> {
     try {
-      // Load LTM
+      // Load ALL LTM for all users (Memory manager filters them in-memory)
       const ltmRows = this.db.query<any, []>(`SELECT * FROM ltm_nodes`).all()
       const ltm: MemoryNode[] = ltmRows.map(row => ({
         id: row.id as string,
+        userId: row.user_id as string,
         content: row.content as string,
         category: row.category as FactCategory,
         importance: row.importance as number,
@@ -94,14 +106,16 @@ export class SQLiteAdapter implements MemoryPersist {
         source: row.source as 'heuristic' | 'llm',
       }))
 
-      // Load STM Summaries
-      const stmRows = this.db.query<{ content: string }, []>(`SELECT content FROM stm_summaries ORDER BY id ASC`).all()
+      // Load ALL STM summaries
+      const stmRows = this.db.query<any, []>(`SELECT * FROM stm_summaries ORDER BY id ASC`).all()
+      
+      // Note: In v1.1, the Memory manager's load() expects a single array of summaries.
+      // If the adapter is used for massive multi-tenancy, the Memory manager itself
+      // might need a minor upgrade to handle the segmented loading.
+      // For now, we return the global set to stay compatible with Memory.load().
       const stmSummaries = stmRows.map(row => row.content)
 
-      // If entirely empty, return null so memory system knows there's no pre-existing state
-      if (ltm.length === 0 && stmSummaries.length === 0) {
-        return null
-      }
+      if (ltm.length === 0 && stmSummaries.length === 0) return null
 
       return {
         ltm,

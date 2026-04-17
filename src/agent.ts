@@ -67,7 +67,7 @@ export class Agent {
       safeMode: true,
       maxSteps: 10,
       temperature: 0.7,
-      timeoutMs: 60_000,
+      timeoutMs: 120_000,
       ...config,
     }
 
@@ -145,7 +145,7 @@ export class Agent {
         totalCostUsd,
         startedAt,
         cached: false,
-        metadata: {},
+        metadata: { ...(opts.metadata ?? {}) },
       }
 
       // ── Cache check (only for first step, no tools mid-conversation) ───

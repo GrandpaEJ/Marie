@@ -61,8 +61,8 @@ export class LTM {
   // ── Write ─────────────────────────────────────────────────────────────────
 
   add(node: Omit<MemoryNode, 'id' | 'createdAt' | 'lastAccessedAt' | 'accessCount'>): MemoryNode {
-    // Check for duplicates (similar content in same category)
-    const existing = this.findDuplicate(node.content, node.category)
+    // Check for duplicates (similar content in same category for THIS user)
+    const existing = this.findDuplicate(node.content, node.category, node.userId)
     if (existing) {
       // Merge: update importance if new one is higher
       if (node.importance > existing.importance) {
@@ -115,6 +115,7 @@ export class LTM {
 
   query(text: string, opts: MemoryQueryOptions = {}): MemoryNode[] {
     const {
+      userId,
       category,
       limit = 5,
       minImportance = 0,
@@ -130,6 +131,7 @@ export class LTM {
     for (const [id, matchCount] of hits) {
       const node = this.nodes.get(id)
       if (!node) continue
+      if (userId && node.userId !== userId) continue
       if (category && node.category !== category) continue
       if (node.importance < minImportance) continue
 
@@ -165,11 +167,11 @@ export class LTM {
   }
 
   // Retrieve all nodes by category
-  byCategory_(category: FactCategory): MemoryNode[] {
+  byCategory_(category: FactCategory, userId?: string): MemoryNode[] {
     const ids = this.byCategory.get(category) ?? new Set()
     return [...ids]
       .map(id => this.nodes.get(id)!)
-      .filter(Boolean)
+      .filter(n => n && (!userId || n.userId === userId))
       .sort((a, b) => b.importance - a.importance)
   }
 
@@ -183,12 +185,12 @@ export class LTM {
 
   // ── Internal ──────────────────────────────────────────────────────────────
 
-  private findDuplicate(content: string, category: FactCategory): MemoryNode | null {
+  private findDuplicate(content: string, category: FactCategory, userId?: string): MemoryNode | null {
     const ids = this.byCategory.get(category) ?? new Set()
     const contentLower = content.toLowerCase()
     for (const id of ids) {
       const node = this.nodes.get(id)!
-      if (node.content.toLowerCase() === contentLower) return node
+      if (node.userId === userId && node.content.toLowerCase() === contentLower) return node
     }
     return null
   }

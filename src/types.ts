@@ -128,6 +128,7 @@ export interface AgentConfig {
 export interface ChatOptions {
   history?: Message[]
   model?: string              // override model for this specific call
+  metadata?: Record<string, unknown> // metadata passed into the middleware for this run
 }
 
 // ── Internal ───────────────────────────────────────────────────────────────

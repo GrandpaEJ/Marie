@@ -1,32 +1,44 @@
 /**
- * Telegram bot demo — Silvi v1
- * Run: TG_TOKEN=your_token bun run telegram
- * Reads AI_MODEL, AI_API_KEY, AI_BASE_URL from .env automatically.
- *
+ * Advanced Telegram Bot — Marie v1
+ * 
  * Features:
- *  - Streaming responses (edits the message as tokens arrive)
- *  - Per-user conversation memory (last 20 turns)
- *  - /start and /clear commands
- *  - Budget protection (max $0.50 per run)
- *  - Structured logging to stderr
+ *  - Persistent Multi-User Memory: Remembers facts about each user individually.
+ *  - Scoped SQL Persistence: Saves memories to 'marie-telegram.sqlite'.
+ *  - Streaming Responses: Real-time message updates as the LLM thinks.
+ *  - Multi-User Isolation: User A's facts never leak to User B.
+ *  - Increased Resilience: 120s timeout for slower models.
  */
 
-import { Agent, MemoryCache, createLogger } from '../src/index.ts'
+import { 
+  Agent, 
+  MemoryCache, 
+  createLogger, 
+  Memory, 
+  SQLiteAdapter, 
+  createMemoryMiddleware 
+} from '../src/index.ts'
 import { telegramAdapter } from '../integrations/telegram.ts'
 import { webFetch } from '../tools/index.ts'
 
-// ── Config from .env ───────────────────────────────────────────────────────
-const model   = process.env.AI_MODEL   ?? 'gpt-4o-mini'
+// ── Persistence ───────────────────────────────────────────────────────────
+const memory = new Memory({
+  persist: new SQLiteAdapter('marie-telegram.sqlite'),
+  maxStmSummaries: 5,        // Keep more history for active bots
+})
+
+// Load existing memories from DB on startup
+await memory.load()
+
+// ── Config ────────────────────────────────────────────────────────────────
+const model   = process.env.AI_MODEL   ?? 'gpt-4o'
 const apiKey  = process.env.AI_API_KEY ?? ''
 const baseUrl = process.env.AI_BASE_URL || undefined
 const token   = process.env.TG_TOKEN
 
 if (!token) {
-  console.error('❌  Set TG_TOKEN in .env  (TG_TOKEN=your_bot_token)')
+  console.error('❌  Set TG_TOKEN in environment or .env')
   process.exit(1)
 }
-
-console.log(`🤖 Starting bot  model=${model}  provider=${baseUrl ?? 'OpenAI'}`)
 
 // ── Agent ──────────────────────────────────────────────────────────────────
 const agent = new Agent({
@@ -34,15 +46,17 @@ const agent = new Agent({
   apiKey,
   baseUrl,
   safeMode: true,
-  systemPrompt: `You are a helpful, friendly assistant available via Telegram.
-Be concise — users read on small screens. Use plain text, not markdown.`,
+  systemPrompt: `You are a helpful, extremely capable AI assistant. 
+You have a long-term memory system. If you know facts about the user, use them.
+Be concise. Use plain text.`,
   budget: {
-    maxCostUsd: 0.50,
+    maxCostUsd: 1.00,
     maxSteps: 10,
   },
   cache: new MemoryCache(300),
   middleware: [
-    createLogger({ context: { bot: 'telegram' } }),
+    createLogger({ context: { bot: 'marie-v1' } }),
+    createMemoryMiddleware(memory), // <--- Multi-user auto-memory logic
   ],
 })
   .register(webFetch)
@@ -50,15 +64,16 @@ Be concise — users read on small screens. Use plain text, not markdown.`,
 // ── Start adapter ──────────────────────────────────────────────────────────
 const bot = telegramAdapter(agent, {
   token,
-  startMessage: "👋 Hello! I'm an AI assistant. How can I help you?\n\n/clear — reset conversation",
+  startMessage: "👋 Marie Memory System Active.\n\nI remember our past chats individually. /clear to reset.",
   pollIntervalMs: 500,
+  externalHistory: true, // <--- Tell adapter to use our Middleware instead of its own map
 })
 
-console.log('✅  Bot running. Press Ctrl+C to stop.')
+console.log('✅  Marie Telegram Bot Running. [Multi-User Memory Enabled]')
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
+  await memory.save() // Final save on shutdown
   bot.stop()
-  console.log('\n👋 Bot stopped.')
+  console.log('\n👋 Bot stopped and memory saved.')
   process.exit(0)
 })
-

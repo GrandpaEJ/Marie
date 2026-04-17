@@ -2,10 +2,8 @@
 // Uses the Telegram Bot API via long-polling (no webhooks needed).
 // Streams agent responses back to the user in real time by editing the message.
 //
-// Usage:
-//   import { Agent } from 'silvi'
-//   import { telegramAdapter } from 'silvi/integrations/telegram'
-//   telegramAdapter(agent, { token: process.env.TG_TOKEN! })
+// v1.1: Supports advanced Marie Memory via middleware. 
+// If MemoryMiddleware is present, it automatically scopes conversation by userId.
 
 import type { Agent } from '../src/agent.ts'
 
@@ -19,6 +17,8 @@ export interface TelegramOptions {
   allowedUserIds?: number[]
   // Custom welcome message
   startMessage?: string
+  // If true, the adapter won't manage its own history (use when using MemoryMiddleware)
+  externalHistory?: boolean
 }
 
 const API = (token: string, method: string) =>
@@ -39,11 +39,12 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
   const maxLen = opts.maxMessageLength ?? 4000
   const allowed = opts.allowedUserIds ?? []
   const startMsg = opts.startMessage ?? "👋 I'm your AI assistant. Send me a message!"
+  const externalHistory = opts.externalHistory ?? false
 
   let offset = 0
   let running = true
 
-  // Per-user conversation history
+  // Per-user conversation history (only used if externalHistory=false)
   const histories = new Map<number, Array<{ role: 'user' | 'assistant'; content: string }>>()
 
   async function poll() {
@@ -92,9 +93,12 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
             continue
           }
 
-          // Get or init conversation history
-          if (!histories.has(chatId)) histories.set(chatId, [])
-          const history = histories.get(chatId)!
+          // History management
+          let currentHistory = undefined
+          if (!externalHistory) {
+            if (!histories.has(chatId)) histories.set(chatId, [])
+            currentHistory = histories.get(chatId)!
+          }
 
           // Send typing indicator
           await tgPost(token, 'sendChatAction', { chat_id: chatId, action: 'typing' })
@@ -111,11 +115,16 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
           let lastEdit = 0
 
           try {
-            for await (const chunk of agent.chat(text, { history })) {
+            // We pass userId via metadata so Marie MemoryMiddleware knows who this is
+            const chatOpts = {
+              history: currentHistory,
+              metadata: { userId: String(userId) }
+            }
+
+            for await (const chunk of agent.chat(text, chatOpts)) {
               accumulated += chunk
-              // Edit the message every 500ms to stream updates to user
               const now = Date.now()
-              if (msgId && now - lastEdit > 500) {
+              if (msgId && now - lastEdit > 800) { // Slower edit interval for Telegram stability
                 const display = accumulated.slice(-maxLen)
                 await tgPost(token, 'editMessageText', {
                   chat_id: chatId,
@@ -126,7 +135,7 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
               }
             }
 
-            // Final edit with complete response
+            // Final edit
             if (msgId) {
               await tgPost(token, 'editMessageText', {
                 chat_id: chatId,
@@ -136,6 +145,7 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
             }
           } catch (err) {
             const errMsg = err instanceof Error ? err.message : 'Unknown error'
+            console.error('[telegram] chat error:', err)
             if (msgId) {
               await tgPost(token, 'editMessageText', {
                 chat_id: chatId,
@@ -145,11 +155,12 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
             }
           }
 
-          // Update history
-          history.push({ role: 'user', content: text })
-          history.push({ role: 'assistant', content: accumulated })
-          // Keep last 20 turns
-          if (history.length > 40) history.splice(0, history.length - 40)
+          // Update internal history if not using external memory system
+          if (currentHistory) {
+            currentHistory.push({ role: 'user', content: text })
+            currentHistory.push({ role: 'assistant', content: accumulated })
+            if (currentHistory.length > 40) currentHistory.splice(0, currentHistory.length - 40)
+          }
         }
       } catch (err) {
         console.error('[telegram] poll error:', err)

@@ -16,6 +16,7 @@ export type FactCategory =
 
 export interface MemoryNode {
   id: string
+  userId?: string              // optional: owner of this memory node
   content: string
   category: FactCategory
   importance: number           // 1–10 (higher = surfaces first in retrieval)
@@ -35,6 +36,7 @@ export type SummaryStrategy = 'bullet' | 'paragraph' | 'hybrid'
 export interface MemorySnapshot {
   ltm: MemoryNode[]
   stmSummaries: string[]
+  userId?: string              // optional: scoped user id for this snapshot
   savedAt: number
 }
 
@@ -70,6 +72,7 @@ export interface MemoryConfig {
 // ── Query Options ───────────────────────────────────────────────────────────
 
 export interface MemoryQueryOptions {
+  userId?: string                // optional: filter by owner
   category?: FactCategory        // filter by category
   limit?: number                 // max results (default: 5)
   minImportance?: number         // filter by minimum importance

@@ -1,8 +1,11 @@
 // Short-Term Memory — conversation window with multi-strategy summarization.
 // Keeps recent turns verbatim. Compresses older turns into bullets/paragraphs.
+// v1.1: Added multi-user scoping via Map<userId, Buffer>.
 
 import type { Message } from '../types.ts'
 import type { SummaryStrategy } from './types.ts'
+
+const DEFAULT_USER = 'default'
 
 // ── Default summarizers ─────────────────────────────────────────────────────
 // These are heuristic-only (zero LLM cost) and are overrideable.
@@ -39,8 +42,9 @@ export interface STMOptions {
 }
 
 export class STM {
-  private rawBuffer: Message[] = []    // the live conversation turns
-  private summaries: string[] = []     // compressed older batches
+  private rawBuffers = new Map<string, Message[]>()       // userId -> Message[]
+  private summaryBuffers = new Map<string, string[]>()    // userId -> string[]
+  
   private recentTurns: number
   private maxSummaries: number
   private strategy: SummaryStrategy
@@ -53,25 +57,41 @@ export class STM {
     this.customSummarize = opts.summarize
   }
 
-  // ── Write ─────────────────────────────────────────────────────────────────
+  // ── Scoped accessors ──────────────────────────────────────────────────────
 
-  add(message: Message): void {
-    this.rawBuffer.push(message)
+  private getBuffer(userId = DEFAULT_USER): Message[] {
+    if (!this.rawBuffers.has(userId)) this.rawBuffers.set(userId, [])
+    return this.rawBuffers.get(userId)!
   }
 
-  addAll(messages: Message[]): void {
-    for (const m of messages) this.add(m)
+  private getSummaries(userId = DEFAULT_USER): string[] {
+    if (!this.summaryBuffers.has(userId)) this.summaryBuffers.set(userId, [])
+    return this.summaryBuffers.get(userId)!
+  }
+
+  // ── Write ─────────────────────────────────────────────────────────────────
+
+  add(message: Message, userId = DEFAULT_USER): void {
+    this.getBuffer(userId).push(message)
+  }
+
+  addAll(messages: Message[], userId = DEFAULT_USER): void {
+    for (const m of messages) this.add(m, userId)
   }
 
   // Trigger compression of old turns into a summary paragraph/bullets.
   // Call this at end of each conversation turn.
-  async consolidate(): Promise<void> {
+  async consolidate(userId = DEFAULT_USER): Promise<void> {
     const maxMessages = this.recentTurns * 2  // user + assistant per turn
+    const buffer = this.getBuffer(userId)
 
-    if (this.rawBuffer.length <= maxMessages) return  // not full yet
+    if (buffer.length <= maxMessages) return  // not full yet
 
-    const toCompress = this.rawBuffer.slice(0, -maxMessages)
-    this.rawBuffer = this.rawBuffer.slice(-maxMessages)
+    const toCompress = buffer.slice(0, -maxMessages)
+    const recent = buffer.slice(-maxMessages)
+    
+    // Update buffer in place
+    this.rawBuffers.set(userId, recent)
 
     let summary: string
     if (this.customSummarize) {
@@ -85,11 +105,12 @@ export class STM {
       summary = this.heuristicSummarize(toCompress)
     }
 
-    this.summaries.push(summary)
+    const summaries = this.getSummaries(userId)
+    summaries.push(summary)
 
     // Token reduction: gracefully forget oldest context if we exceed capacity
-    if (this.summaries.length > this.maxSummaries) {
-      this.summaries.shift()
+    if (summaries.length > this.maxSummaries) {
+      summaries.shift()
     }
   }
 
@@ -97,11 +118,13 @@ export class STM {
 
   // Returns the full history to inject as `opts.history` in agent.chat()
   // Format: [summary injection messages] + [raw recent messages]
-  getHistory(): Message[] {
+  getHistory(userId = DEFAULT_USER): Message[] {
     const result: Message[] = []
+    const summaries = this.getSummaries(userId)
+    const buffer = this.getBuffer(userId)
 
-    if (this.summaries.length > 0) {
-      const merged = this.summaries.join('\n\n---\n\n')
+    if (summaries.length > 0) {
+      const merged = summaries.join('\n\n---\n\n')
       result.push({
         role: 'user',
         content: `[Conversation History Summary]:\n${merged}`,
@@ -112,32 +135,37 @@ export class STM {
       })
     }
 
-    result.push(...this.rawBuffer)
+    result.push(...buffer)
     return result
   }
 
   // Raw buffer only (for inspection/extraction)
-  getRaw(): Message[] {
-    return this.rawBuffer.slice()
+  getRaw(userId = DEFAULT_USER): Message[] {
+    return this.getBuffer(userId).slice()
   }
 
-  getSummaries(): string[] {
-    return this.summaries.slice()
+  getAllSummaries(userId = DEFAULT_USER): string[] {
+    return this.getSummaries(userId).slice()
   }
 
-  // Restore from persistence
-  restore(rawBuffer: Message[], summaries: string[]): void {
-    this.rawBuffer = rawBuffer
-    this.summaries = summaries
+  // Restore from persistence. We assume snapshot handles userId mapping.
+  restore(userId: string, rawBuffer: Message[], summaries: string[]): void {
+    this.rawBuffers.set(userId, rawBuffer)
+    this.summaryBuffers.set(userId, summaries)
   }
 
-  clear(): void {
-    this.rawBuffer = []
-    this.summaries = []
+  clear(userId = DEFAULT_USER): void {
+    this.rawBuffers.set(userId, [])
+    this.summaryBuffers.set(userId, [])
   }
 
-  get rawLength(): number {
-    return this.rawBuffer.length
+  rawLength(userId = DEFAULT_USER): number {
+    return this.getBuffer(userId).length
+  }
+
+  // Returns all user IDs currently in memory
+  getUserIds(): string[] {
+    return [...this.rawBuffers.keys()]
   }
 
   // ── Internal ──────────────────────────────────────────────────────────────
