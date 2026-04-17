@@ -25,6 +25,7 @@ export class Memory {
 
     this.stm = new STM({
       recentTurns: this.cfg.recentTurns,
+      maxSummaries: opts.maxStmSummaries,
       strategy: opts.summaryStrategy ?? 'bullet',
       summarize: opts.summarize,
     })

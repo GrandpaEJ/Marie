@@ -49,6 +49,7 @@ export interface MemoryConfig {
   // STM
   recentTurns?: number           // keep N recent turns verbatim (default: 8)
   summaryStrategy?: SummaryStrategy
+  maxStmSummaries?: number       // max old summaries to keep before forgetting (default: 3)
 
   // LTM
   categories?: FactCategory[]    // which categories to extract (default: all)

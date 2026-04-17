@@ -34,6 +34,7 @@ function defaultParagraphSummarize(messages: Message[]): string {
 export interface STMOptions {
   recentTurns?: number            // raw turns to keep verbatim (default: 8)
   strategy?: SummaryStrategy      // how to compress old turns (default: 'bullet')
+  maxSummaries?: number           // max summaries before oldest is forgotten (default: 3)
   summarize?: (messages: Message[]) => Promise<string>  // override (use a cheap LLM)
 }
 
@@ -41,11 +42,13 @@ export class STM {
   private rawBuffer: Message[] = []    // the live conversation turns
   private summaries: string[] = []     // compressed older batches
   private recentTurns: number
+  private maxSummaries: number
   private strategy: SummaryStrategy
   private customSummarize?: (messages: Message[]) => Promise<string>
 
   constructor(opts: STMOptions = {}) {
     this.recentTurns = opts.recentTurns ?? 8
+    this.maxSummaries = opts.maxSummaries ?? 3
     this.strategy = opts.strategy ?? 'bullet'
     this.customSummarize = opts.summarize
   }
@@ -83,6 +86,11 @@ export class STM {
     }
 
     this.summaries.push(summary)
+
+    // Token reduction: gracefully forget oldest context if we exceed capacity
+    if (this.summaries.length > this.maxSummaries) {
+      this.summaries.shift()
+    }
   }
 
   // ── Read ──────────────────────────────────────────────────────────────────

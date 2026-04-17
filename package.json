@@ -13,7 +13,6 @@
     "cost-aware":  "bun run examples/cost-aware.ts",
     "multi-agent": "bun run examples/multi-agent.ts",
     "telegram":    "bun run examples/telegram-bot.ts",
-    "ollama":      "bun run examples/ollama-test.ts",
     "memory":      "bun run examples/memory-demo.ts",
     "serve":       "bun run src/server.ts",
     "typecheck":   "bun build src/index.ts --outdir /tmp/silvi-check"
