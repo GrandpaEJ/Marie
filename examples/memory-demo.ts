@@ -3,7 +3,7 @@
  * Run: bun run examples/memory-demo.ts
  */
 
-import { Agent, Memory, createMemoryMiddleware, createLogger } from '../src/index.ts'
+import { Agent, Memory, createMemoryMiddleware, createLogger, SQLiteAdapter } from '../src/index.ts'
 import { config } from 'dotenv'
 
 config()
@@ -12,12 +12,17 @@ async function main() {
   console.log('\n🧠 --- Marie Advanced Memory Demo ---\n')
 
   // 1. Initialize Memory Manager
-  // In a real app, you might provide 'persist' methods to save/load from db
+  // We use the built-in SQLiteAdapter for lightning-fast disk persistence.
+  // Users can easily swap this out for JSONAdapter or their own (MongoDB, Postgres, etc) by implementing MemoryPersist.
   const memory = new Memory({
     recentTurns: 2,           // keep STM extremely tight for demo
     summaryStrategy: 'hybrid', // use hybrid summarizer for STM
     maxContextFacts: 3,       // inject max 3 LTM facts per turn
+    persist: new SQLiteAdapter('memory-demo.sqlite'), // Out-of-the-box fast persistence
   })
+
+  // Load old session data if it exists
+  await memory.load()
 
   // 2. Initialize Agent
   const agent = new Agent({
@@ -55,7 +60,9 @@ async function main() {
   const reply3 = await agent.run("Where do I live? And what is the name of my project?")
   console.log('\n🤖 Agent:', reply3, '\n')
 
-  console.log('🎉 Demo completed successfully.')
+  await memory.save()
+
+  console.log('🎉 Demo completed successfully. (Memory saved to memory-demo.sqlite)')
 }
 
 main().catch(console.error)

@@ -48,7 +48,9 @@ export { MODEL_COSTS, estimateCost, registerModel, getModel } from './routing/mo
 export { SlidingWindowMemory } from './memory/sliding-window.ts'
 export { Memory } from './memory/memory.ts'
 export { createMemoryMiddleware } from './memory/middleware.ts'
-export type { MemoryConfig, MemoryNode, FactCategory } from './memory/types.ts'
+export { JSONAdapter } from './memory/adapters/json.ts'
+export { SQLiteAdapter } from './memory/adapters/sqlite.ts'
+export type { MemoryConfig, MemoryNode, FactCategory, MemoryPersist, MemorySnapshot } from './memory/types.ts'
 
 // ── Orchestration ─────────────────────────────────────────────────────────
 export { Supervisor } from './orchestration/supervisor.ts'
