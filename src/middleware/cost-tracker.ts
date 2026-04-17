@@ -75,7 +75,11 @@ export function createCostTracker(
       // Accumulate cost
       const stepCost = estimateCost(ctx.model, ctx.usage.prompt, ctx.usage.completion)
       state.totalCostUsd += stepCost
-      ctx.costUsd = state.totalCostUsd   // update context so downstream middleware can read it
+
+      // Sync to context for downstream middleware (like logger)
+      ctx.costUsd = stepCost
+      ctx.totalCostUsd = state.totalCostUsd
+      ctx.totalUsage = { ...state.totalTokens }
 
       // Check token + cost budgets
       check('tokens', state.totalTokens.total, budget.maxTokens)

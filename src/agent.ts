@@ -127,6 +127,8 @@ export class Agent {
     ]
 
     const tools = this.registry.toOpenAI(this.cfg.safeMode)
+    let totalUsage: TokenUsage = { prompt: 0, completion: 0, total: 0 }
+    let totalCostUsd = 0
 
     // ── Agent loop ────────────────────────────────────────────────────────
     for (let step = 0; step < this.cfg.maxSteps; step++) {
@@ -139,6 +141,8 @@ export class Agent {
         step,
         usage: { prompt: 0, completion: 0, total: 0 },
         costUsd: 0,
+        totalUsage,
+        totalCostUsd,
         startedAt,
         cached: false,
         metadata: {},
@@ -234,6 +238,10 @@ export class Agent {
       for (const mw of middlewareStack) {
         await mw.after?.(ctx)
       }
+
+      // Sync totals back from context (updated by cost-tracker)
+      totalUsage = ctx.totalUsage
+      totalCostUsd = ctx.totalCostUsd
 
       this.emitter.emit('step:end', { step, usage: stepUsage, cached: false })
 

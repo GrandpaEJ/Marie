@@ -66,6 +66,8 @@ export interface MiddlewareContext {
   costUsd: number
   startedAt: number                       // epoch ms when the run() started
   cached: boolean                         // was this step served from cache?
+  totalUsage: TokenUsage                  // cumulative tokens for the whole run()
+  totalCostUsd: number                    // cumulative cost for the whole run()
   metadata: Record<string, unknown>       // carry arbitrary data between middleware
 }
 
