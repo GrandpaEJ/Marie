@@ -1,25 +1,28 @@
 {
-  "name": "silvi",
-  "version": "0.1.0",
+  "name": "marie",
+  "version": "1.0.0",
   "type": "module",
-  "description": "Minimal, fast agent library for any OpenAI-compatible API",
+  "description": "High-performance, cost-optimized agent framework for Bun",
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./tools": "./tools/index.ts"
+    "./tools": "./tools/index.ts",
+    "./integrations": "./integrations/index.ts"
   },
   "scripts": {
-    "example":     "bun run examples/basic.ts",
-    "cost-aware":  "bun run examples/cost-aware.ts",
-    "multi-agent": "bun run examples/multi-agent.ts",
-    "telegram":    "bun run examples/telegram-bot.ts",
-    "memory":      "bun run examples/memory-demo.ts",
-    "serve":       "bun run src/server.ts",
-    "typecheck":   "bun build src/index.ts --outdir /tmp/silvi-check"
+    "dev":          "bun run examples/basic.ts",
+    "telegram":     "bun run examples/telegram-bot.ts",
+    "memory":       "bun run examples/memory-demo.ts",
+    "serve":        "bun run src/server.ts",
+    "docs:dev":     "vitepress dev docs",
+    "docs:build":   "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "typecheck":    "bun build src/index.ts --target bun --outdir /tmp/marie-check"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "vitepress": "^1.6.4"
   },
-  "keywords": ["agent", "llm", "openai", "openrouter", "groq", "bun"],
+  "keywords": ["agent", "llm", "marie", "bun", "advanced-rag", "memory"],
   "license": "MIT"
 }
