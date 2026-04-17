@@ -46,6 +46,9 @@ export { MODEL_COSTS, estimateCost, registerModel, getModel } from './routing/mo
 
 // ── Memory ────────────────────────────────────────────────────────────────
 export { SlidingWindowMemory } from './memory/sliding-window.ts'
+export { Memory } from './memory/memory.ts'
+export { createMemoryMiddleware } from './memory/middleware.ts'
+export type { MemoryConfig, MemoryNode, FactCategory } from './memory/types.ts'
 
 // ── Orchestration ─────────────────────────────────────────────────────────
 export { Supervisor } from './orchestration/supervisor.ts'
