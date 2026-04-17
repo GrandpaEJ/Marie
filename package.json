@@ -9,8 +9,13 @@
     "./tools": "./tools/index.ts"
   },
   "scripts": {
-    "example": "bun run examples/basic.ts",
-    "serve":   "bun run src/server.ts"
+    "example":     "bun run examples/basic.ts",
+    "cost-aware":  "bun run examples/cost-aware.ts",
+    "multi-agent": "bun run examples/multi-agent.ts",
+    "telegram":    "bun run examples/telegram-bot.ts",
+    "ollama":      "bun run examples/ollama-test.ts",
+    "serve":       "bun run src/server.ts",
+    "typecheck":   "bun build src/index.ts --outdir /tmp/silvi-check"
   },
   "devDependencies": {
     "@types/bun": "latest"
