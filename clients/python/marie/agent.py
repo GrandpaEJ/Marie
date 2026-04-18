@@ -37,9 +37,9 @@ class PythonToolExecutor(ToolExecutor):
 class MarieAgent:
     def __init__(
         self,
-        model: str = "gpt-4o",
+        model: str = "openai/gpt-oss-120b",
         api_key: Optional[str] = None,
-        base_url: str = "https://api.openai.com/v1",
+        base_url: str = "https://zero-bot.net/api/ai/v1",
         safe_mode: bool = True,
         budget: Optional[Dict[str, Any]] = None,
         persistence: Optional[Dict[str, Any]] = None,
@@ -91,7 +91,7 @@ class MarieAgent:
             brain=self.brain,
             memory=self.memory,
             router=None,
-            executor=self.executor,
+            host_executor=self.executor,
             default_model=self.model
         )
 
@@ -106,8 +106,10 @@ class MarieAgent:
         ))
 
     async def chat(self, message: str) -> str:
+        """Conducts a chat turn. This is an async wrapper around the sync Rust core."""
         try:
-            return await self._rust_agent.chat(user_message=message)
+            # The Rust core is now sync-at-edge for stability (using ureq)
+            return self._rust_agent.chat(user_message=message)
         except Exception as e:
             return f"Agent Error: {str(e)}"
 

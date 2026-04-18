@@ -8,6 +8,13 @@ pub enum ModelTier {
 #[derive(uniffi::Record, Clone, Serialize, Deserialize)]
 pub struct ToolCall {
     pub id: String,
+    #[serde(rename = "type")]
+    pub call_type: String,
+    pub function: ToolFunction,
+}
+
+#[derive(uniffi::Record, Clone, Serialize, Deserialize)]
+pub struct ToolFunction {
     pub name: String,
     pub arguments: String,
 }
@@ -15,8 +22,11 @@ pub struct ToolCall {
 #[derive(uniffi::Record, Clone, Serialize, Deserialize)]
 pub struct Message {
     pub role: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<ToolCall>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_call_id: Option<String>,
 }
 
