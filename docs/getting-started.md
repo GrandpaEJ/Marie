@@ -1,76 +1,54 @@
-# Getting Started
+# Getting Started with Marie
 
-Let's build your first AI agent. This guide will take you from a blank directory to a streaming agent capable of using tools.
+This guide will walk you through setting up the **Universal Marie Agent** on your local machine or Termux.
 
-## 1. Installation
+## Prerequisites
 
-Marie is designed for the **Bun** runtime. If you don't have it yet, install it from [bun.sh](https://bun.sh).
+- **Rust**: To build the core. `pkg install rust` (Termux) or according to [rustup.rs](https://rustup.rs/).
+- **Python**: 3.10 or higher.
+- **Bun** (Optional): If you want to run the legacy TS examples or the docs site.
 
-Install the Marie library:
+## 1. Build the Core
+
+Marie uses a Rust-based core for performance and safety. First, you need to compile it and generate the Python bindings:
 
 ```bash
-bun add @grandpaej/marie
+# Clone the repository
+git clone https://github.com/GrandpaEJ/Marie.git
+cd Marie
+
+# Run the build script
+bash build.sh
 ```
 
-## 2. Setting up Credentials
+This will create the `libmarie_core.so` and the Python package in `clients/python/marie`.
 
-Marie respects the `.env` convention. Create a file in your project root:
+## 2. Your First Python Agent
 
-```env
-AI_MODEL=gpt-4o
-AI_API_KEY=sk-....
-AI_BASE_URL=https://api.openai.com/v1
+Create a file named `my_agent.py`:
+
+```python
+import sys
+import os
+
+# Ensure the library is in your path
+sys.path.append(os.path.join(os.getcwd(), 'clients', 'python'))
+
+from marie.agent import MarieAgent
+
+agent = MarieAgent(api_key=os.getenv("AI_API_KEY"), model="gpt-3.5-turbo")
+response = agent.chat("Marie, tell me a short joke.")
+print(response)
 ```
 
-> [!TIP]
-> Marie works with **any** OAI-compatible provider. You can swap `BASE_URL` to OpenRouter, Groq, or even a local Ollama instance.
-
-## 3. Hello Marie
-
-Create a file named `index.ts`. We'll start with a basic configuration.
-
-```typescript
-import { Agent } from "@grandpaej/marie";
-
-const agent = new Agent({
-  model: process.env.AI_MODEL!,
-  apiKey: process.env.AI_API_KEY!,
-  systemPrompt: "You are Marie, a concise and high-performance assistant."
-});
-
-// Run with standard output
-const response = await agent.run("Tell me a joke about Bun.");
-console.log(response);
-```
-
-Run it immediately:
+Run it:
 ```bash
-bun run index.ts
+export AI_API_KEY="sk-..."
+python3 my_agent.py
 ```
 
-## 4. Streaming (Better UX)
+## 3. Next Steps
 
-In production, you rarely want to wait for the full response. Marie provides an `async generator` interface for real-time streaming:
-
-```typescript
-const stream = agent.chat("Write a 500-word essay on AI safety.");
-
-for await (const chunk of stream) {
-  process.stdout.write(chunk);
-}
-```
-
-## 5. Adding "Skills" (Tools)
-
-Marie becomes truly powerful when you give her **Tools**. Let's add the built-in `webFetch` tool so she can browse the internet.
-
-```typescript
-import { webFetch } from "@grandpaej/marie/tools";
-
-agent.register(webFetch);
-
-// Now she can look things up:
-await agent.run("What is the current version of Bun?");
-```
-
-Congratulations! You've just built a streaming, tool-enabled AI agent with zero bloat. Read on to the next chapter to learn how Marie's **Middleware Pipeline** works under the hood.
+- Explore the **[Python Client API](python-client.md)** for advanced features like budgeting and tools.
+- Learn about the **[Universal Rust Core](universal-core.md)** architecture.
+- Connect Marie to **[Facebook Messenger](integrations/facebook.ts)** using the adapters.

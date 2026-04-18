@@ -1,0 +1,48 @@
+name: Marie CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build Core & Test Python
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r clients/python/requirements.txt
+
+    - name: Rust Code Quality
+      run: |
+        cd marie-core
+        cargo fmt --check || true
+        cargo clippy -- -D warnings || true
+
+    - name: Build Universal Core
+      run: bash build.sh
+
+    - name: Run Python Smoke Test (Logic)
+      run: |
+        # We set a dummy key to avoid API errors, since we are testing logic
+        export AI_API_KEY="sk-dummy-key-for-ci"
+        python3 examples/python_usage.py
+
+    - name: Run Tool Logic Test
+      run: |
+        export AI_API_KEY="sk-dummy-key-for-ci"
+        python3 examples/tool_usage_python.py

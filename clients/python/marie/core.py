@@ -460,15 +460,21 @@ def _uniffi_check_contract_api_version(lib):
         raise InternalError("UniFFI contract version mismatch: try cleaning and rebuilding your project")
 
 def _uniffi_check_api_checksums(lib):
-    if lib.uniffi_marie_core_checksum_method_mariebrain_add_message() != 42597:
+    if lib.uniffi_marie_core_checksum_method_mariebrain_add_message() != 29838:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_mariebrain_get_history() != 7521:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_mariebrain_get_metrics() != 41388:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_mariebrain_get_tool_definitions() != 7207:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_mariebrain_is_tool_allowed() != 18851:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_mariebrain_register_tool() != 6492:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_mariebrain_track_usage() != 28342:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_marie_core_checksum_constructor_mariebrain_new() != 699:
+    if lib.uniffi_marie_core_checksum_constructor_mariebrain_new() != 6841:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -588,12 +594,12 @@ _UniffiLib.uniffi_marie_core_fn_free_mariebrain.argtypes = (
 _UniffiLib.uniffi_marie_core_fn_free_mariebrain.restype = None
 _UniffiLib.uniffi_marie_core_fn_constructor_mariebrain_new.argtypes = (
     _UniffiRustBuffer,
+    ctypes.c_int8,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_marie_core_fn_constructor_mariebrain_new.restype = ctypes.c_void_p
 _UniffiLib.uniffi_marie_core_fn_method_mariebrain_add_message.argtypes = (
     ctypes.c_void_p,
-    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -608,6 +614,23 @@ _UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_metrics.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_metrics.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_tool_definitions.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_tool_definitions.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_marie_core_fn_method_mariebrain_is_tool_allowed.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_mariebrain_is_tool_allowed.restype = ctypes.c_int8
+_UniffiLib.uniffi_marie_core_fn_method_mariebrain_register_tool.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_mariebrain_register_tool.restype = None
 _UniffiLib.uniffi_marie_core_fn_method_mariebrain_track_usage.argtypes = (
     ctypes.c_void_p,
     ctypes.c_uint32,
@@ -892,6 +915,15 @@ _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_history.restype = ct
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_metrics.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_metrics.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_tool_definitions.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_tool_definitions.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_is_tool_allowed.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_is_tool_allowed.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_register_tool.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_register_tool.restype = ctypes.c_uint16
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_track_usage.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_track_usage.restype = ctypes.c_uint16
@@ -986,11 +1018,17 @@ class _UniffiConverterString:
 
 
 class MarieBrainProtocol(typing.Protocol):
-    def add_message(self, role: "str",content: "typing.Optional[str]"):
+    def add_message(self, msg: "Message"):
         raise NotImplementedError
     def get_history(self, ):
         raise NotImplementedError
     def get_metrics(self, ):
+        raise NotImplementedError
+    def get_tool_definitions(self, ):
+        raise NotImplementedError
+    def is_tool_allowed(self, name: "str"):
+        raise NotImplementedError
+    def register_tool(self, tool: "ToolDefinition"):
         raise NotImplementedError
     def track_usage(self, tokens: "int",cost_usd: "float"):
         raise NotImplementedError
@@ -998,11 +1036,14 @@ class MarieBrainProtocol(typing.Protocol):
 
 class MarieBrain:
     _pointer: ctypes.c_void_p
-    def __init__(self, budget: "Budget"):
+    def __init__(self, budget: "Budget",safe_mode: "bool"):
         _UniffiConverterTypeBudget.check_lower(budget)
         
+        _UniffiConverterBool.check_lower(safe_mode)
+        
         self._pointer = _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_constructor_mariebrain_new,
-        _UniffiConverterTypeBudget.lower(budget))
+        _UniffiConverterTypeBudget.lower(budget),
+        _UniffiConverterBool.lower(safe_mode))
 
     def __del__(self):
         # In case of partial initialization of instances.
@@ -1023,14 +1064,11 @@ class MarieBrain:
         return inst
 
 
-    def add_message(self, role: "str",content: "typing.Optional[str]") -> None:
-        _UniffiConverterString.check_lower(role)
-        
-        _UniffiConverterOptionalString.check_lower(content)
+    def add_message(self, msg: "Message") -> None:
+        _UniffiConverterTypeMessage.check_lower(msg)
         
         _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_mariebrain_add_message,self._uniffi_clone_pointer(),
-        _UniffiConverterString.lower(role),
-        _UniffiConverterOptionalString.lower(content))
+        _UniffiConverterTypeMessage.lower(msg))
 
 
 
@@ -1050,6 +1088,38 @@ class MarieBrain:
         return _UniffiConverterTypeMetrics.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_metrics,self._uniffi_clone_pointer(),)
         )
+
+
+
+
+
+    def get_tool_definitions(self, ) -> "typing.List[ToolDefinition]":
+        return _UniffiConverterSequenceTypeToolDefinition.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_tool_definitions,self._uniffi_clone_pointer(),)
+        )
+
+
+
+
+
+    def is_tool_allowed(self, name: "str") -> "bool":
+        _UniffiConverterString.check_lower(name)
+        
+        return _UniffiConverterBool.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_mariebrain_is_tool_allowed,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(name))
+        )
+
+
+
+
+
+    def register_tool(self, tool: "ToolDefinition") -> None:
+        _UniffiConverterTypeToolDefinition.check_lower(tool)
+        
+        _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_mariebrain_register_tool,self._uniffi_clone_pointer(),
+        _UniffiConverterTypeToolDefinition.lower(tool))
+
 
 
 
@@ -1146,17 +1216,25 @@ class _UniffiConverterTypeBudget(_UniffiConverterRustBuffer):
 class Message:
     role: "str"
     content: "typing.Optional[str]"
-    def __init__(self, *, role: "str", content: "typing.Optional[str]"):
+    tool_calls: "typing.Optional[typing.List[ToolCall]]"
+    tool_call_id: "typing.Optional[str]"
+    def __init__(self, *, role: "str", content: "typing.Optional[str]", tool_calls: "typing.Optional[typing.List[ToolCall]]", tool_call_id: "typing.Optional[str]"):
         self.role = role
         self.content = content
+        self.tool_calls = tool_calls
+        self.tool_call_id = tool_call_id
 
     def __str__(self):
-        return "Message(role={}, content={})".format(self.role, self.content)
+        return "Message(role={}, content={}, tool_calls={}, tool_call_id={})".format(self.role, self.content, self.tool_calls, self.tool_call_id)
 
     def __eq__(self, other):
         if self.role != other.role:
             return False
         if self.content != other.content:
+            return False
+        if self.tool_calls != other.tool_calls:
+            return False
+        if self.tool_call_id != other.tool_call_id:
             return False
         return True
 
@@ -1166,17 +1244,23 @@ class _UniffiConverterTypeMessage(_UniffiConverterRustBuffer):
         return Message(
             role=_UniffiConverterString.read(buf),
             content=_UniffiConverterOptionalString.read(buf),
+            tool_calls=_UniffiConverterOptionalSequenceTypeToolCall.read(buf),
+            tool_call_id=_UniffiConverterOptionalString.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.role)
         _UniffiConverterOptionalString.check_lower(value.content)
+        _UniffiConverterOptionalSequenceTypeToolCall.check_lower(value.tool_calls)
+        _UniffiConverterOptionalString.check_lower(value.tool_call_id)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.role, buf)
         _UniffiConverterOptionalString.write(value.content, buf)
+        _UniffiConverterOptionalSequenceTypeToolCall.write(value.tool_calls, buf)
+        _UniffiConverterOptionalString.write(value.tool_call_id, buf)
 
 
 class Metrics:
@@ -1220,6 +1304,99 @@ class _UniffiConverterTypeMetrics(_UniffiConverterRustBuffer):
         _UniffiConverterUInt32.write(value.tokens, buf)
         _UniffiConverterDouble.write(value.cost_usd, buf)
         _UniffiConverterUInt32.write(value.steps, buf)
+
+
+class ToolCall:
+    id: "str"
+    name: "str"
+    arguments: "str"
+    def __init__(self, *, id: "str", name: "str", arguments: "str"):
+        self.id = id
+        self.name = name
+        self.arguments = arguments
+
+    def __str__(self):
+        return "ToolCall(id={}, name={}, arguments={})".format(self.id, self.name, self.arguments)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.name != other.name:
+            return False
+        if self.arguments != other.arguments:
+            return False
+        return True
+
+class _UniffiConverterTypeToolCall(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ToolCall(
+            id=_UniffiConverterString.read(buf),
+            name=_UniffiConverterString.read(buf),
+            arguments=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterString.check_lower(value.name)
+        _UniffiConverterString.check_lower(value.arguments)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterString.write(value.name, buf)
+        _UniffiConverterString.write(value.arguments, buf)
+
+
+class ToolDefinition:
+    name: "str"
+    description: "str"
+    parameters_json: "str"
+    safe: "bool"
+    def __init__(self, *, name: "str", description: "str", parameters_json: "str", safe: "bool"):
+        self.name = name
+        self.description = description
+        self.parameters_json = parameters_json
+        self.safe = safe
+
+    def __str__(self):
+        return "ToolDefinition(name={}, description={}, parameters_json={}, safe={})".format(self.name, self.description, self.parameters_json, self.safe)
+
+    def __eq__(self, other):
+        if self.name != other.name:
+            return False
+        if self.description != other.description:
+            return False
+        if self.parameters_json != other.parameters_json:
+            return False
+        if self.safe != other.safe:
+            return False
+        return True
+
+class _UniffiConverterTypeToolDefinition(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ToolDefinition(
+            name=_UniffiConverterString.read(buf),
+            description=_UniffiConverterString.read(buf),
+            parameters_json=_UniffiConverterString.read(buf),
+            safe=_UniffiConverterBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.name)
+        _UniffiConverterString.check_lower(value.description)
+        _UniffiConverterString.check_lower(value.parameters_json)
+        _UniffiConverterBool.check_lower(value.safe)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.name, buf)
+        _UniffiConverterString.write(value.description, buf)
+        _UniffiConverterString.write(value.parameters_json, buf)
+        _UniffiConverterBool.write(value.safe, buf)
 
 
 
@@ -1304,6 +1481,33 @@ class _UniffiConverterOptionalString(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalSequenceTypeToolCall(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterSequenceTypeToolCall.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterSequenceTypeToolCall.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterSequenceTypeToolCall.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterSequenceTypeMessage(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -1327,6 +1531,56 @@ class _UniffiConverterSequenceTypeMessage(_UniffiConverterRustBuffer):
             _UniffiConverterTypeMessage.read(buf) for i in range(count)
         ]
 
+
+
+class _UniffiConverterSequenceTypeToolCall(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeToolCall.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeToolCall.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeToolCall.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeToolDefinition(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeToolDefinition.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeToolDefinition.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeToolDefinition.read(buf) for i in range(count)
+        ]
+
 # Async support
 
 __all__ = [
@@ -1334,6 +1588,8 @@ __all__ = [
     "Budget",
     "Message",
     "Metrics",
+    "ToolCall",
+    "ToolDefinition",
     "MarieBrain",
 ]
 

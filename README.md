@@ -8,14 +8,15 @@
 
 ## 📚 Documentation
 
-We have comprehensive documentation available at [docs/](file:///home/grandpa/me/code/py/agent/silvi-v1/docs/index.md).
+We have comprehensive documentation available at [docs/](docs/index.md).
 
-- **[Getting Started](file:///home/grandpa/me/code/py/agent/silvi-v1/docs/getting-started.md)**: Installation and first agent.
-- **[Associative Memory](file:///home/grandpa/me/code/py/agent/silvi-v1/docs/memory.md)**: Human-like memory architecture.
-- **[Orchestration](file:///home/grandpa/me/code/py/agent/silvi-v1/docs/orchestration.md)**: Supervisor, Pipeline, and Parallel patterns.
-- **[Tools & Skills](file:///home/grandpa/me/code/py/agent/silvi-v1/docs/tools.md)**: Custom tool creation.
+- **[Getting Started](docs/getting-started.md)**: Installation and first agent.
+- **[Associative Memory](docs/memory.md)**: Human-like memory architecture.
+- **[Orchestration](docs/orchestration.md)**: Supervisor, Pipeline, and Parallel patterns.
+- **[Tools & Skills](docs/tools.md)**: Custom tool creation.
 
 To run the documentation site locally:
+
 ```bash
 bun run docs:dev
 ```
@@ -48,7 +49,7 @@ import { Agent } from "@grandpaej/marie";
 
 const agent = new Agent({
   model: "gpt-4o",
-  apiKey: process.env.AI_API_KEY
+  apiKey: process.env.AI_API_KEY,
 });
 
 const response = await agent.chat("Hello Marie!");
