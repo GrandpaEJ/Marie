@@ -1,4 +1,3 @@
-use reqwest::{Client, header};
 use serde_json::{json, Value};
 use crate::models::{Message, ToolDefinition, MarieError};
 
@@ -6,7 +5,6 @@ use crate::models::{Message, ToolDefinition, MarieError};
 pub struct LlmClient {
     api_key: String,
     base_url: String,
-    http: Client,
 }
 
 #[uniffi::export]
@@ -16,15 +14,10 @@ impl LlmClient {
         Self {
             api_key,
             base_url: base_url.trim_end_matches('/').to_string(),
-            http: Client::new(),
         }
     }
 
-    pub async fn complete(&self, model: String, messages: Vec<Message>, tools: Option<Vec<ToolDefinition>>) -> Result<Message, MarieError> {
-        let mut headers = header::HeaderMap::new();
-        headers.insert(header::AUTHORIZATION, header::HeaderValue::from_str(&format!("Bearer {}", self.api_key)).unwrap());
-        headers.insert(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"));
-
+    pub fn complete(&self, model: String, messages: Vec<Message>, tools: Option<Vec<ToolDefinition>>) -> Result<Message, MarieError> {
         let mut body = json!({
             "model": model,
             "messages": messages,
@@ -47,19 +40,17 @@ impl LlmClient {
             }
         }
 
-        let res = self.http.post(format!("{}/chat/completions", self.base_url))
-            .headers(headers)
-            .json(&body)
-            .send()
-            .await
+        let resp = ureq::post(&format!("{}/chat/completions", self.base_url))
+            .set("Authorization", &format!("Bearer {}", self.api_key))
+            .set("Content-Type", "application/json")
+            .send_json(body)
             .map_err(|e| MarieError::Network(e.to_string()))?;
 
-        if !res.status().is_success() {
-            let status = res.status();
-            return Err(MarieError::Llm(format!("Status: {}", status)));
+        if resp.status() != 200 {
+            return Err(MarieError::Llm(format!("Status: {}", resp.status())));
         }
 
-        let data: Value = res.json().await.map_err(|e| MarieError::Internal(e.to_string()))?;
+        let data: Value = resp.into_json().map_err(|e| MarieError::Internal(e.to_string()))?;
         let choice = &data["choices"][0]["message"];
         
         let content = choice["content"].as_str().map(|s| s.to_string());

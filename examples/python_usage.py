@@ -1,40 +1,41 @@
 import sys
 import os
+import asyncio
 
-# Add clients/python to path so we can import 'marie'
+# Add clients/python to path
 sys.path.append(os.path.join(os.getcwd(), 'clients', 'python'))
 
 from marie.agent import MarieAgent
 
-def main():
-    print("🌸 Marie Agent - Python + Rust Core Demo (Modular)")
+async def main():
+    print("🌸 Marie Agent - Universal Rust Core Demo")
     
     api_key = os.getenv("AI_API_KEY", "your-key-here")
     
+    # Initialize Agent (Logic runs in Rust)
     agent = MarieAgent(
         api_key=api_key,
-        model="gpt-3.5-turbo",
-        budget_config={
-            "max_tokens": 1000,
-            "max_cost_usd": 0.05,
+        model="gpt-4o",
+        budget={
+            "max_tokens": 2000,
+            "max_cost_usd": 0.10,
             "max_steps": 5
+        },
+        persistence={
+            "mode": "json",
+            "path": "marie-session.json"
         }
     )
     
-    agent.add_system_prompt("You are Marie, a helpful assistant powered by a modular Rust core.")
-    
-    print("\n[History in Rust Core]:")
-    for msg in agent.brain.get_history():
-        print(f" - {msg.role}: {msg.content}")
+    print("\n[Thinking with Rust Brain]...")
+    response = await agent.chat("Hi Marie! Tell me a very short fun fact about Rust (the language).")
+    print(f"Marie: {response}")
 
-    print("\n[Testing Rust Budget Enforcement]:")
-    print("Simulating tokens usage...")
-    agent.brain.track_usage(1100, 0.01)
-    
     metrics = agent.get_metrics()
     print(f"\n[Final Metrics from Rust]:")
-    print(f" - Total Tokens: {metrics.tokens}")
-    print(f" - Total Cost: ${metrics.cost_usd:.4f}")
+    print(f" - Total Tokens: {metrics['tokens']}")
+    print(f" - Total Cost: ${metrics['cost_usd']:.4f}")
+    print(f" - Total Steps: {metrics['steps']}")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

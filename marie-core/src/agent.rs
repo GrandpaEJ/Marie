@@ -37,7 +37,7 @@ impl MarieAgent {
         }
     }
 
-    pub async fn chat(&self, user_message: String) -> Result<String, MarieError> {
+    pub fn chat(&self, user_message: String) -> Result<String, MarieError> {
         self.memory.add(Message {
             role: "user".to_string(),
             content: Some(user_message.clone()),
@@ -61,13 +61,13 @@ impl MarieAgent {
             let history = self.memory.get_history();
             let tools = self.brain.get_tool_definitions();
 
-            let response_msg = self.client.complete(model, history, Some(tools)).await?;
+            let response_msg = self.client.complete(model, history, Some(tools))?;
             self.brain.track_usage(100, 0.001);
 
-            if let Some(ref tool_calls) = response_msg.tool_calls {
-                if !tool_calls.is_empty() {
+            if let Some(ref calls) = response_msg.tool_calls {
+                if !calls.is_empty() {
                     self.memory.add(response_msg.clone());
-                    for tc in tool_calls {
+                    for tc in calls {
                         let result = if !self.brain.is_tool_allowed(tc.name.clone()) {
                             format!("Error: Tool '{}' is blocked by safe_mode.", tc.name)
                         } else {
@@ -86,7 +86,15 @@ impl MarieAgent {
             }
             let content = response_msg.content.clone().unwrap_or_default();
             self.memory.add(response_msg);
+            
+            // Auto-save session after successful turn
+            let _ = self.memory.save();
+            
             return Ok(content);
         }
+    }
+
+    pub fn save_session(&self) -> Result<(), MarieError> {
+        self.memory.save()
     }
 }

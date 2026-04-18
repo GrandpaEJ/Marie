@@ -42,12 +42,36 @@ pub struct Metrics {
     pub steps: u32,
 }
 
+#[derive(uniffi::Enum, Clone, Debug, Serialize, Deserialize)]
+pub enum PersistenceConfig {
+    None,
+    Sqlite { path: String },
+    Json { path: String },
+    Host,
+}
+
+#[derive(uniffi::Record, Clone, Serialize, Deserialize)]
+pub struct LtmNode {
+    pub id: String,
+    pub user_id: Option<String>,
+    pub content: String,
+    pub category: String,
+    pub importance: f64,
+    pub created_at: i64,
+    pub last_accessed_at: i64,
+    pub access_count: u32,
+    pub tags: Vec<String>,
+    pub source: String,
+}
+
 #[derive(uniffi::Error, Debug, thiserror::Error)]
 pub enum MarieError {
     #[error("Network error: {0}")]
     Network(String),
     #[error("LLM error: {0}")]
     Llm(String),
+    #[error("Persistence error: {0}")]
+    Persistence(String),
     #[error("Internal error: {0}")]
     Internal(String),
 }

@@ -6,7 +6,14 @@ dist/
 bun.lockb
 .claude/
 *.sqlite
-*.sqlite*docs/.vitepress/cache
+*.sqlite*
+
+*.sqlite-shm
+*.sqlite-wal
+
+docs/
+.vitepress/
+cache
 docs/.vitepress/cache
 docs/.vitepress/dist
 
