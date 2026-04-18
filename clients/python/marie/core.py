@@ -27,7 +27,6 @@ import threading
 import itertools
 import traceback
 import typing
-import asyncio
 import platform
 
 # Used for default argument values
@@ -461,9 +460,11 @@ def _uniffi_check_contract_api_version(lib):
         raise InternalError("UniFFI contract version mismatch: try cleaning and rebuilding your project")
 
 def _uniffi_check_api_checksums(lib):
-    if lib.uniffi_marie_core_checksum_method_llmclient_complete() != 30007:
+    if lib.uniffi_marie_core_checksum_method_llmclient_complete() != 14732:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_marie_core_checksum_method_marieagent_chat() != 412:
+    if lib.uniffi_marie_core_checksum_method_marieagent_chat() != 31022:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_marieagent_save_session() != 15486:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_mariebrain_get_metrics() != 41388:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -479,17 +480,29 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_slidingwindowmemory_add() != 12411:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_slidingwindowmemory_build_history_with_summary() != 910:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_slidingwindowmemory_get_history() != 17386:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_marie_core_checksum_constructor_llmclient_new() != 19069:
+    if lib.uniffi_marie_core_checksum_method_slidingwindowmemory_save() != 14827:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_marie_core_checksum_constructor_marieagent_new() != 16838:
+    if lib.uniffi_marie_core_checksum_constructor_llmclient_new() != 3746:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_constructor_marieagent_new() != 17227:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_constructor_mariebrain_new() != 6841:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_constructor_modelrouter_new() != 50166:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_marie_core_checksum_constructor_slidingwindowmemory_new() != 42972:
+    if lib.uniffi_marie_core_checksum_constructor_slidingwindowmemory_new() != 61448:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_persistenceprovider_save_ltm() != 23305:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_persistenceprovider_load_ltm() != 35851:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_persistenceprovider_save_stm() != 7925:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_persistenceprovider_load_stm() != 26545:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_summarizer_summarize() != 11793:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -601,12 +614,32 @@ class _UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 _UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiForeignFutureStructVoid,
 )
+_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD1 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD2 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD3 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
 _UNIFFI_CALLBACK_INTERFACE_SUMMARIZER_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UNIFFI_CALLBACK_INTERFACE_TOOL_EXECUTOR_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
     ctypes.POINTER(_UniffiRustCallStatus),
 )
+class _UniffiVTableCallbackInterfacePersistenceProvider(ctypes.Structure):
+    _fields_ = [
+        ("save_ltm", _UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD0),
+        ("load_ltm", _UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD1),
+        ("save_stm", _UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD2),
+        ("load_stm", _UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD3),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
 class _UniffiVTableCallbackInterfaceSummarizer(ctypes.Structure):
     _fields_ = [
         ("summarize", _UNIFFI_CALLBACK_INTERFACE_SUMMARIZER_METHOD0),
@@ -638,8 +671,9 @@ _UniffiLib.uniffi_marie_core_fn_method_llmclient_complete.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_marie_core_fn_method_llmclient_complete.restype = ctypes.c_uint64
+_UniffiLib.uniffi_marie_core_fn_method_llmclient_complete.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_marie_core_fn_clone_marieagent.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -663,8 +697,14 @@ _UniffiLib.uniffi_marie_core_fn_constructor_marieagent_new.restype = ctypes.c_vo
 _UniffiLib.uniffi_marie_core_fn_method_marieagent_chat.argtypes = (
     ctypes.c_void_p,
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_marie_core_fn_method_marieagent_chat.restype = ctypes.c_uint64
+_UniffiLib.uniffi_marie_core_fn_method_marieagent_chat.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_marie_core_fn_method_marieagent_save_session.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_marieagent_save_session.restype = None
 _UniffiLib.uniffi_marie_core_fn_clone_mariebrain.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -749,6 +789,9 @@ _UniffiLib.uniffi_marie_core_fn_free_slidingwindowmemory.restype = None
 _UniffiLib.uniffi_marie_core_fn_constructor_slidingwindowmemory_new.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_marie_core_fn_constructor_slidingwindowmemory_new.restype = ctypes.c_void_p
@@ -758,11 +801,27 @@ _UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_add.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_add.restype = None
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_build_history_with_summary.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_build_history_with_summary.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_get_history.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_get_history.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_save.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_save.restype = None
+_UniffiLib.uniffi_marie_core_fn_init_callback_vtable_persistenceprovider.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfacePersistenceProvider),
+)
+_UniffiLib.uniffi_marie_core_fn_init_callback_vtable_persistenceprovider.restype = None
 _UniffiLib.uniffi_marie_core_fn_init_callback_vtable_summarizer.argtypes = (
     ctypes.POINTER(_UniffiVTableCallbackInterfaceSummarizer),
 )
@@ -1045,6 +1104,9 @@ _UniffiLib.uniffi_marie_core_checksum_method_llmclient_complete.restype = ctypes
 _UniffiLib.uniffi_marie_core_checksum_method_marieagent_chat.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_marieagent_chat.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_marieagent_save_session.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_marieagent_save_session.restype = ctypes.c_uint16
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_metrics.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_metrics.restype = ctypes.c_uint16
@@ -1066,9 +1128,15 @@ _UniffiLib.uniffi_marie_core_checksum_method_modelrouter_route.restype = ctypes.
 _UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_add.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_add.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_build_history_with_summary.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_build_history_with_summary.restype = ctypes.c_uint16
 _UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_get_history.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_get_history.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_save.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_save.restype = ctypes.c_uint16
 _UniffiLib.uniffi_marie_core_checksum_constructor_llmclient_new.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_constructor_llmclient_new.restype = ctypes.c_uint16
@@ -1084,6 +1152,18 @@ _UniffiLib.uniffi_marie_core_checksum_constructor_modelrouter_new.restype = ctyp
 _UniffiLib.uniffi_marie_core_checksum_constructor_slidingwindowmemory_new.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_constructor_slidingwindowmemory_new.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_save_ltm.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_save_ltm.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_load_ltm.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_load_ltm.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_save_stm.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_save_stm.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_load_stm.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_persistenceprovider_load_stm.restype = ctypes.c_uint16
 _UniffiLib.uniffi_marie_core_checksum_method_summarizer_summarize.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_summarizer_summarize.restype = ctypes.c_uint16
@@ -1112,6 +1192,19 @@ class _UniffiConverterUInt32(_UniffiConverterPrimitiveInt):
     @staticmethod
     def write(value, buf):
         buf.write_u32(value)
+
+class _UniffiConverterInt64(_UniffiConverterPrimitiveInt):
+    CLASS_NAME = "i64"
+    VALUE_MIN = -2**63
+    VALUE_MAX = 2**63
+
+    @staticmethod
+    def read(buf):
+        return buf.read_i64()
+
+    @staticmethod
+    def write(value, buf):
+        buf.write_i64(value)
 
 class _UniffiConverterDouble(_UniffiConverterPrimitiveFloat):
     @staticmethod
@@ -1211,30 +1304,21 @@ class LlmClient:
         inst._pointer = pointer
         return inst
 
-    async def complete(self, model: "str",messages: "typing.List[Message]",tools: "typing.Optional[typing.List[ToolDefinition]]") -> "Message":
+
+    def complete(self, model: "str",messages: "typing.List[Message]",tools: "typing.Optional[typing.List[ToolDefinition]]") -> "Message":
         _UniffiConverterString.check_lower(model)
         
         _UniffiConverterSequenceTypeMessage.check_lower(messages)
         
         _UniffiConverterOptionalSequenceTypeToolDefinition.check_lower(tools)
         
-        return await _uniffi_rust_call_async(
-            _UniffiLib.uniffi_marie_core_fn_method_llmclient_complete(
-                self._uniffi_clone_pointer(), 
+        return _UniffiConverterTypeMessage.lift(
+            _uniffi_rust_call_with_error(_UniffiConverterTypeMarieError,_UniffiLib.uniffi_marie_core_fn_method_llmclient_complete,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(model),
         _UniffiConverterSequenceTypeMessage.lower(messages),
-        _UniffiConverterOptionalSequenceTypeToolDefinition.lower(tools)
-            ),
-            _UniffiLib.ffi_marie_core_rust_future_poll_rust_buffer,
-            _UniffiLib.ffi_marie_core_rust_future_complete_rust_buffer,
-            _UniffiLib.ffi_marie_core_rust_future_free_rust_buffer,
-            # lift function
-            _UniffiConverterTypeMessage.lift,
-            
-    # Error FFI converter
-_UniffiConverterTypeMarieError,
-
+        _UniffiConverterOptionalSequenceTypeToolDefinition.lower(tools))
         )
+
 
 
 
@@ -1272,6 +1356,8 @@ class _UniffiConverterTypeLlmClient:
 
 class MarieAgentProtocol(typing.Protocol):
     def chat(self, user_message: "str"):
+        raise NotImplementedError
+    def save_session(self, ):
         raise NotImplementedError
 
 
@@ -1316,24 +1402,23 @@ class MarieAgent:
         inst._pointer = pointer
         return inst
 
-    async def chat(self, user_message: "str") -> "str":
+
+    def chat(self, user_message: "str") -> "str":
         _UniffiConverterString.check_lower(user_message)
         
-        return await _uniffi_rust_call_async(
-            _UniffiLib.uniffi_marie_core_fn_method_marieagent_chat(
-                self._uniffi_clone_pointer(), 
-        _UniffiConverterString.lower(user_message)
-            ),
-            _UniffiLib.ffi_marie_core_rust_future_poll_rust_buffer,
-            _UniffiLib.ffi_marie_core_rust_future_complete_rust_buffer,
-            _UniffiLib.ffi_marie_core_rust_future_free_rust_buffer,
-            # lift function
-            _UniffiConverterString.lift,
-            
-    # Error FFI converter
-_UniffiConverterTypeMarieError,
-
+        return _UniffiConverterString.lift(
+            _uniffi_rust_call_with_error(_UniffiConverterTypeMarieError,_UniffiLib.uniffi_marie_core_fn_method_marieagent_chat,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(user_message))
         )
+
+
+
+
+
+    def save_session(self, ) -> None:
+        _uniffi_rust_call_with_error(_UniffiConverterTypeMarieError,_UniffiLib.uniffi_marie_core_fn_method_marieagent_save_session,self._uniffi_clone_pointer(),)
+
+
 
 
 
@@ -1592,20 +1677,33 @@ class _UniffiConverterTypeModelRouter:
 class SlidingWindowMemoryProtocol(typing.Protocol):
     def add(self, message: "Message"):
         raise NotImplementedError
+    def build_history_with_summary(self, history: "typing.List[Message]",summary_text: "typing.Optional[str]"):
+        raise NotImplementedError
     def get_history(self, ):
+        raise NotImplementedError
+    def save(self, ):
         raise NotImplementedError
 
 
 class SlidingWindowMemory:
     _pointer: ctypes.c_void_p
-    def __init__(self, recent_turns: "typing.Optional[int]",summarizer: "typing.Optional[Summarizer]"):
+    def __init__(self, recent_turns: "typing.Optional[int]",summarizer: "typing.Optional[Summarizer]",persistence_config: "PersistenceConfig",host_persistence: "typing.Optional[PersistenceProvider]",user_id: "typing.Optional[str]"):
         _UniffiConverterOptionalUInt32.check_lower(recent_turns)
         
         _UniffiConverterOptionalTypeSummarizer.check_lower(summarizer)
         
+        _UniffiConverterTypePersistenceConfig.check_lower(persistence_config)
+        
+        _UniffiConverterOptionalTypePersistenceProvider.check_lower(host_persistence)
+        
+        _UniffiConverterOptionalString.check_lower(user_id)
+        
         self._pointer = _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_constructor_slidingwindowmemory_new,
         _UniffiConverterOptionalUInt32.lower(recent_turns),
-        _UniffiConverterOptionalTypeSummarizer.lower(summarizer))
+        _UniffiConverterOptionalTypeSummarizer.lower(summarizer),
+        _UniffiConverterTypePersistenceConfig.lower(persistence_config),
+        _UniffiConverterOptionalTypePersistenceProvider.lower(host_persistence),
+        _UniffiConverterOptionalString.lower(user_id))
 
     def __del__(self):
         # In case of partial initialization of instances.
@@ -1637,10 +1735,33 @@ class SlidingWindowMemory:
 
 
 
+    def build_history_with_summary(self, history: "typing.List[Message]",summary_text: "typing.Optional[str]") -> "typing.List[Message]":
+        _UniffiConverterSequenceTypeMessage.check_lower(history)
+        
+        _UniffiConverterOptionalString.check_lower(summary_text)
+        
+        return _UniffiConverterSequenceTypeMessage.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_build_history_with_summary,self._uniffi_clone_pointer(),
+        _UniffiConverterSequenceTypeMessage.lower(history),
+        _UniffiConverterOptionalString.lower(summary_text))
+        )
+
+
+
+
+
     def get_history(self, ) -> "typing.List[Message]":
         return _UniffiConverterSequenceTypeMessage.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_get_history,self._uniffi_clone_pointer(),)
         )
+
+
+
+
+
+    def save(self, ) -> None:
+        _uniffi_rust_call_with_error(_UniffiConverterTypeMarieError,_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_save,self._uniffi_clone_pointer(),)
+
 
 
 
@@ -1717,6 +1838,98 @@ class _UniffiConverterTypeBudget(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalUInt32.write(value.max_tokens, buf)
         _UniffiConverterOptionalDouble.write(value.max_cost_usd, buf)
         _UniffiConverterOptionalUInt32.write(value.max_steps, buf)
+
+
+class LtmNode:
+    id: "str"
+    user_id: "typing.Optional[str]"
+    content: "str"
+    category: "str"
+    importance: "float"
+    created_at: "int"
+    last_accessed_at: "int"
+    access_count: "int"
+    tags: "typing.List[str]"
+    source: "str"
+    def __init__(self, *, id: "str", user_id: "typing.Optional[str]", content: "str", category: "str", importance: "float", created_at: "int", last_accessed_at: "int", access_count: "int", tags: "typing.List[str]", source: "str"):
+        self.id = id
+        self.user_id = user_id
+        self.content = content
+        self.category = category
+        self.importance = importance
+        self.created_at = created_at
+        self.last_accessed_at = last_accessed_at
+        self.access_count = access_count
+        self.tags = tags
+        self.source = source
+
+    def __str__(self):
+        return "LtmNode(id={}, user_id={}, content={}, category={}, importance={}, created_at={}, last_accessed_at={}, access_count={}, tags={}, source={})".format(self.id, self.user_id, self.content, self.category, self.importance, self.created_at, self.last_accessed_at, self.access_count, self.tags, self.source)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.user_id != other.user_id:
+            return False
+        if self.content != other.content:
+            return False
+        if self.category != other.category:
+            return False
+        if self.importance != other.importance:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        if self.last_accessed_at != other.last_accessed_at:
+            return False
+        if self.access_count != other.access_count:
+            return False
+        if self.tags != other.tags:
+            return False
+        if self.source != other.source:
+            return False
+        return True
+
+class _UniffiConverterTypeLtmNode(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return LtmNode(
+            id=_UniffiConverterString.read(buf),
+            user_id=_UniffiConverterOptionalString.read(buf),
+            content=_UniffiConverterString.read(buf),
+            category=_UniffiConverterString.read(buf),
+            importance=_UniffiConverterDouble.read(buf),
+            created_at=_UniffiConverterInt64.read(buf),
+            last_accessed_at=_UniffiConverterInt64.read(buf),
+            access_count=_UniffiConverterUInt32.read(buf),
+            tags=_UniffiConverterSequenceString.read(buf),
+            source=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterOptionalString.check_lower(value.user_id)
+        _UniffiConverterString.check_lower(value.content)
+        _UniffiConverterString.check_lower(value.category)
+        _UniffiConverterDouble.check_lower(value.importance)
+        _UniffiConverterInt64.check_lower(value.created_at)
+        _UniffiConverterInt64.check_lower(value.last_accessed_at)
+        _UniffiConverterUInt32.check_lower(value.access_count)
+        _UniffiConverterSequenceString.check_lower(value.tags)
+        _UniffiConverterString.check_lower(value.source)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterOptionalString.write(value.user_id, buf)
+        _UniffiConverterString.write(value.content, buf)
+        _UniffiConverterString.write(value.category, buf)
+        _UniffiConverterDouble.write(value.importance, buf)
+        _UniffiConverterInt64.write(value.created_at, buf)
+        _UniffiConverterInt64.write(value.last_accessed_at, buf)
+        _UniffiConverterUInt32.write(value.access_count, buf)
+        _UniffiConverterSequenceString.write(value.tags, buf)
+        _UniffiConverterString.write(value.source, buf)
 
 
 class Message:
@@ -1947,6 +2160,21 @@ class MarieError:  # type: ignore
         def __repr__(self):
             return "MarieError.Llm({})".format(str(self))
     _UniffiTempMarieError.Llm = Llm # type: ignore
+    class Persistence(_UniffiTempMarieError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "MarieError.Persistence({})".format(str(self))
+    _UniffiTempMarieError.Persistence = Persistence # type: ignore
     class Internal(_UniffiTempMarieError):
         def __init__(self, *values):
             if len(values) != 1:
@@ -1980,6 +2208,10 @@ class _UniffiConverterTypeMarieError(_UniffiConverterRustBuffer):
                 _UniffiConverterString.read(buf),
             )
         if variant == 3:
+            return MarieError.Persistence(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
             return MarieError.Internal(
                 _UniffiConverterString.read(buf),
             )
@@ -1991,6 +2223,9 @@ class _UniffiConverterTypeMarieError(_UniffiConverterRustBuffer):
             _UniffiConverterString.check_lower(value._values[0])
             return
         if isinstance(value, MarieError.Llm):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, MarieError.Persistence):
             _UniffiConverterString.check_lower(value._values[0])
             return
         if isinstance(value, MarieError.Internal):
@@ -2005,8 +2240,11 @@ class _UniffiConverterTypeMarieError(_UniffiConverterRustBuffer):
         if isinstance(value, MarieError.Llm):
             buf.write_i32(2)
             _UniffiConverterString.write(value._values[0], buf)
-        if isinstance(value, MarieError.Internal):
+        if isinstance(value, MarieError.Persistence):
             buf.write_i32(3)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, MarieError.Internal):
+            buf.write_i32(4)
             _UniffiConverterString.write(value._values[0], buf)
 
 
@@ -2057,8 +2295,155 @@ class _UniffiConverterTypeModelTier(_UniffiConverterRustBuffer):
 
 
 
-class Summarizer(typing.Protocol):
-    def summarize(self, messages: "typing.List[Message]"):
+
+
+class PersistenceConfig:
+    def __init__(self):
+        raise RuntimeError("PersistenceConfig cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class NONE:
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "PersistenceConfig.NONE()".format()
+
+        def __eq__(self, other):
+            if not other.is_none():
+                return False
+            return True
+    
+    class SQLITE:
+        path: "str"
+
+        def __init__(self,path: "str"):
+            self.path = path
+
+        def __str__(self):
+            return "PersistenceConfig.SQLITE(path={})".format(self.path)
+
+        def __eq__(self, other):
+            if not other.is_sqlite():
+                return False
+            if self.path != other.path:
+                return False
+            return True
+    
+    class JSON:
+        path: "str"
+
+        def __init__(self,path: "str"):
+            self.path = path
+
+        def __str__(self):
+            return "PersistenceConfig.JSON(path={})".format(self.path)
+
+        def __eq__(self, other):
+            if not other.is_json():
+                return False
+            if self.path != other.path:
+                return False
+            return True
+    
+    class HOST:
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "PersistenceConfig.HOST()".format()
+
+        def __eq__(self, other):
+            if not other.is_host():
+                return False
+            return True
+    
+    
+
+    # For each variant, we have an `is_NAME` method for easily checking
+    # whether an instance is that variant.
+    def is_none(self) -> bool:
+        return isinstance(self, PersistenceConfig.NONE)
+    def is_sqlite(self) -> bool:
+        return isinstance(self, PersistenceConfig.SQLITE)
+    def is_json(self) -> bool:
+        return isinstance(self, PersistenceConfig.JSON)
+    def is_host(self) -> bool:
+        return isinstance(self, PersistenceConfig.HOST)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+PersistenceConfig.NONE = type("PersistenceConfig.NONE", (PersistenceConfig.NONE, PersistenceConfig,), {})  # type: ignore
+PersistenceConfig.SQLITE = type("PersistenceConfig.SQLITE", (PersistenceConfig.SQLITE, PersistenceConfig,), {})  # type: ignore
+PersistenceConfig.JSON = type("PersistenceConfig.JSON", (PersistenceConfig.JSON, PersistenceConfig,), {})  # type: ignore
+PersistenceConfig.HOST = type("PersistenceConfig.HOST", (PersistenceConfig.HOST, PersistenceConfig,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypePersistenceConfig(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PersistenceConfig.NONE(
+            )
+        if variant == 2:
+            return PersistenceConfig.SQLITE(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return PersistenceConfig.JSON(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return PersistenceConfig.HOST(
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_none():
+            return
+        if value.is_sqlite():
+            _UniffiConverterString.check_lower(value.path)
+            return
+        if value.is_json():
+            _UniffiConverterString.check_lower(value.path)
+            return
+        if value.is_host():
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_none():
+            buf.write_i32(1)
+        if value.is_sqlite():
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.path, buf)
+        if value.is_json():
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.path, buf)
+        if value.is_host():
+            buf.write_i32(4)
+
+
+
+
+
+class PersistenceProvider(typing.Protocol):
+    def save_ltm(self, nodes: "typing.List[LtmNode]"):
+        raise NotImplementedError
+    def load_ltm(self, user_id: "typing.Optional[str]"):
+        raise NotImplementedError
+    def save_stm(self, user_id: "typing.Optional[str]",summaries: "typing.List[str]"):
+        raise NotImplementedError
+    def load_stm(self, user_id: "typing.Optional[str]"):
         raise NotImplementedError
 # Magic number for the Rust proxy to call using the same mechanism as every other method,
 # to free the callback once it's dropped by Rust.
@@ -2092,6 +2477,123 @@ class _UniffiCallbackInterfaceFfiConverter:
     @classmethod
     def write(cls, cb, buf):
         buf.write_u64(cls.lower(cb))
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplPersistenceProvider:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD0
+    def save_ltm(
+            uniffi_handle,
+            nodes,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypePersistenceProvider._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterSequenceTypeLtmNode.lift(nodes), )
+            method = uniffi_obj.save_ltm
+            return method(*args)
+
+        
+        write_return_value = lambda v: None
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD1
+    def load_ltm(
+            uniffi_handle,
+            user_id,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypePersistenceProvider._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterOptionalString.lift(user_id), )
+            method = uniffi_obj.load_ltm
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterSequenceTypeLtmNode.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD2
+    def save_stm(
+            uniffi_handle,
+            user_id,
+            summaries,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypePersistenceProvider._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterOptionalString.lift(user_id), _UniffiConverterSequenceString.lift(summaries), )
+            method = uniffi_obj.save_stm
+            return method(*args)
+
+        
+        write_return_value = lambda v: None
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_PERSISTENCE_PROVIDER_METHOD3
+    def load_stm(
+            uniffi_handle,
+            user_id,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypePersistenceProvider._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterOptionalString.lift(user_id), )
+            method = uniffi_obj.load_stm
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterSequenceString.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypePersistenceProvider._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfacePersistenceProvider(
+        save_ltm,
+        load_ltm,
+        save_stm,
+        load_stm,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_marie_core_fn_init_callback_vtable_persistenceprovider(ctypes.byref(_uniffi_vtable))
+
+# The _UniffiConverter which transforms the Callbacks in to Handles to pass to Rust.
+_UniffiConverterTypePersistenceProvider = _UniffiCallbackInterfaceFfiConverter()
+
+
+
+class Summarizer(typing.Protocol):
+    def summarize(self, messages: "typing.List[Message]"):
+        raise NotImplementedError
+
 
 # Put all the bits inside a class to keep the top-level namespace clean
 class _UniffiTraitImplSummarizer:
@@ -2322,6 +2824,33 @@ class _UniffiConverterOptionalTypeModelTier(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypePersistenceProvider(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypePersistenceProvider.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypePersistenceProvider.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypePersistenceProvider.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeSummarizer(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -2403,6 +2932,56 @@ class _UniffiConverterOptionalSequenceTypeToolDefinition(_UniffiConverterRustBuf
 
 
 
+class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterString.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterString.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterString.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeLtmNode(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeLtmNode.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeLtmNode.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeLtmNode.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeMessage(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -2476,75 +3055,15 @@ class _UniffiConverterSequenceTypeToolDefinition(_UniffiConverterRustBuffer):
             _UniffiConverterTypeToolDefinition.read(buf) for i in range(count)
         ]
 
-# Async support# RustFuturePoll values
-_UNIFFI_RUST_FUTURE_POLL_READY = 0
-_UNIFFI_RUST_FUTURE_POLL_MAYBE_READY = 1
-
-# Stores futures for _uniffi_continuation_callback
-_UniffiContinuationHandleMap = _UniffiHandleMap()
-
-_UNIFFI_GLOBAL_EVENT_LOOP = None
-
-"""
-Set the event loop to use for async functions
-
-This is needed if some async functions run outside of the eventloop, for example:
-    - A non-eventloop thread is spawned, maybe from `EventLoop.run_in_executor` or maybe from the
-      Rust code spawning its own thread.
-    - The Rust code calls an async callback method from a sync callback function, using something
-      like `pollster` to block on the async call.
-
-In this case, we need an event loop to run the Python async function, but there's no eventloop set
-for the thread.  Use `uniffi_set_event_loop` to force an eventloop to be used in this case.
-"""
-def uniffi_set_event_loop(eventloop: asyncio.BaseEventLoop):
-    global _UNIFFI_GLOBAL_EVENT_LOOP
-    _UNIFFI_GLOBAL_EVENT_LOOP = eventloop
-
-def _uniffi_get_event_loop():
-    if _UNIFFI_GLOBAL_EVENT_LOOP is not None:
-        return _UNIFFI_GLOBAL_EVENT_LOOP
-    else:
-        return asyncio.get_running_loop()
-
-# Continuation callback for async functions
-# lift the return value or error and resolve the future, causing the async function to resume.
-@_UNIFFI_RUST_FUTURE_CONTINUATION_CALLBACK
-def _uniffi_continuation_callback(future_ptr, poll_code):
-    (eventloop, future) = _UniffiContinuationHandleMap.remove(future_ptr)
-    eventloop.call_soon_threadsafe(_uniffi_set_future_result, future, poll_code)
-
-def _uniffi_set_future_result(future, poll_code):
-    if not future.cancelled():
-        future.set_result(poll_code)
-
-async def _uniffi_rust_call_async(rust_future, ffi_poll, ffi_complete, ffi_free, lift_func, error_ffi_converter):
-    try:
-        eventloop = _uniffi_get_event_loop()
-
-        # Loop and poll until we see a _UNIFFI_RUST_FUTURE_POLL_READY value
-        while True:
-            future = eventloop.create_future()
-            ffi_poll(
-                rust_future,
-                _uniffi_continuation_callback,
-                _UniffiContinuationHandleMap.insert((eventloop, future)),
-            )
-            poll_code = await future
-            if poll_code == _UNIFFI_RUST_FUTURE_POLL_READY:
-                break
-
-        return lift_func(
-            _uniffi_rust_call_with_error(error_ffi_converter, ffi_complete, rust_future)
-        )
-    finally:
-        ffi_free(rust_future)
+# Async support
 
 __all__ = [
     "InternalError",
     "MarieError",
     "ModelTier",
+    "PersistenceConfig",
     "Budget",
+    "LtmNode",
     "Message",
     "Metrics",
     "ToolCall",
@@ -2554,6 +3073,7 @@ __all__ = [
     "MarieBrain",
     "ModelRouter",
     "SlidingWindowMemory",
+    "PersistenceProvider",
     "Summarizer",
     "ToolExecutor",
 ]

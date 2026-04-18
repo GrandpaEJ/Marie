@@ -9,8 +9,11 @@ from .core import (
     ModelRouter,
     SlidingWindowMemory,
     ToolExecutor,
+    PersistenceProvider,
+    PersistenceConfig,
     Budget,
     Message,
+    LtmNode,
     ToolDefinition,
     ModelTier
 )
@@ -25,12 +28,7 @@ class PythonToolExecutor(ToolExecutor):
             tool = self.tools.get(name)
             if not tool:
                 return f"Error: Tool '{name}' not found."
-            
-            # Parse arguments (Rust passes them as a JSON string)
             kwargs = json.loads(args)
-            
-            # Execute tool (sync for now as Rust expects a sync return)
-            # In a mature implementation, this would handle async tools via a proxy
             result = tool.run(**kwargs)
             return str(result)
         except Exception as e:
@@ -44,11 +42,14 @@ class MarieAgent:
         base_url: str = "https://api.openai.com/v1",
         safe_mode: bool = True,
         budget: Optional[Dict[str, Any]] = None,
+        persistence: Optional[Dict[str, Any]] = None,
+        user_id: Optional[str] = None,
         recent_turns: int = 10
     ):
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "sk-dummy")
         self.base_url = base_url
         self.model = model
+        self.user_id = user_id
         
         # 1. Initialize Rust Core Components
         budget_obj = Budget(
@@ -57,17 +58,34 @@ class MarieAgent:
             max_steps=budget.get("max_steps") if budget else 10
         )
         
+        # Persistence Config Parsing
+        pers_config = PersistenceConfig.NONE()
+        if persistence:
+            mode = persistence.get("mode", "json")
+            path = persistence.get("path", "marie-memory.json")
+            if mode == "sqlite":
+                pers_config = PersistenceConfig.SQLITE(path=path)
+            elif mode == "json":
+                pers_config = PersistenceConfig.JSON(path=path)
+            elif mode == "host":
+                pers_config = PersistenceConfig.HOST()
+
         self.brain = MarieBrain(budget=budget_obj, safe_mode=safe_mode)
-        self.memory = SlidingWindowMemory(recent_turns=recent_turns, summarizer=None)
+        
+        # Memory with persistence
+        self.memory = SlidingWindowMemory(
+            recent_turns=recent_turns,
+            summarizer=None,
+            persistence_config=pers_config,
+            host_persistence=None, # Implement if mode == "host"
+            user_id=self.user_id
+        )
+        
         self.client = LlmClient(api_key=self.api_key, base_url=self.base_url)
         
-        # 2. Tool Registry (Python side)
         self._tools = {}
         self.executor = PythonToolExecutor(self._tools)
         
-        # 3. The Rust Agent Loop
-        # Note: We pass the router as None for now, as we use the default model.
-        # router = ModelRouter(...) can be added later if needed.
         self._rust_agent = RustAgent(
             client=self.client,
             brain=self.brain,
@@ -78,11 +96,8 @@ class MarieAgent:
         )
 
     def add_tool(self, tool: Any):
-        """Register a tool with both the Python executor and the Rust brain."""
         name = tool.name
         self._tools[name] = tool
-        
-        # Register with Rust brain for LLM visibility
         self.brain.register_tool(ToolDefinition(
             name=name,
             description=tool.description,
@@ -91,12 +106,14 @@ class MarieAgent:
         ))
 
     async def chat(self, message: str) -> str:
-        """The entire multi-step loop is now handled by the Rust core."""
         try:
-            # We call the async Rust method
             return await self._rust_agent.chat(user_message=message)
         except Exception as e:
             return f"Agent Error: {str(e)}"
+
+    def save(self):
+        """Explicitly trigger persistence."""
+        self._rust_agent.save_session()
 
     def get_metrics(self) -> Dict[str, Any]:
         metrics = self.brain.get_metrics()

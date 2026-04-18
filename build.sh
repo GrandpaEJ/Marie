@@ -20,10 +20,13 @@ fi
 # On Linux this is .so, on macOS .dylib, on Windows .dll
 if [ -f "./target/release/libmarie_core.so" ]; then
     cp ./target/release/libmarie_core.so ../clients/python/marie/libmarie_core.so
+    cp ./target/release/libmarie_core.so ../clients/js/libmarie_core.so
 elif [ -f "./target/release/libmarie_core.dylib" ]; then
     cp ./target/release/libmarie_core.dylib ../clients/python/marie/libmarie_core.so
+    cp ./target/release/libmarie_core.dylib ../clients/js/libmarie_core.so
 elif [ -f "./target/release/marie_core.dll" ]; then
     cp ./target/release/marie_core.dll ../clients/python/marie/libmarie_core.so
+    cp ./target/release/marie_core.dll ../clients/js/libmarie_core.so
 fi
 
 echo "✅ Done! Modular refactor complete."
