@@ -2,47 +2,62 @@
   <img src="docs/public/banner.png" alt="Marie Logo" width="800">
 </div>
 
-# 🕊️ Marie v1
+# 🕊️ Marie Universal 
 
-**Marie** (@grandpaej/marie) is a high-performance, cost-optimized agent framework built for **Bun**. It is designed to be the "perfect" agent: scalable, easy to manage, low cost, and high value.
+**Marie** (@grandpaej/marie) is a high-performance, cross-platform AI agent framework powered by a **Rust Universal Core**. It is designed to be the "perfect" agent: scalable, safe, cost-aware, and usable in any language—from **Python on Termux** to **TypeScript on Cloud**.
+
+## 🚀 Key Features
+
+- 🧠 **Universal Core (Rust)**: One brain, many languages. High-speed logic, safety, and budgeting.
+- 💰 **Strict Cost Control**: Real-time token tracking and USD hard budgets enforced in Rust.
+- 🛡️ **Safe Mode**: Granular permissions (e.g., shell/web) enforced before execution.
+- 📦 **Multi-Language**: Native support for **Python** and **TypeScript** (Bun/Node).
+- 📱 **All-Device**: Optimized for Termux (Android), Render (Cloud), and local dev.
+- 📱 **Telegram & Facebook**: Built-in adapters for stateful streaming bots.
+
+---
 
 ## 📚 Documentation
 
-We have comprehensive documentation available at [docs/](docs/index.md).
+Detailed guides are available at [docs/](docs/index.md).
 
-- **[Getting Started](docs/getting-started.md)**: Installation and first agent.
-- **[Associative Memory](docs/memory.md)**: Human-like memory architecture.
-- **[Orchestration](docs/orchestration.md)**: Supervisor, Pipeline, and Parallel patterns.
-- **[Tools & Skills](docs/tools.md)**: Custom tool creation.
+- **[Getting Started](docs/getting-started.md)**: Build the core and run your first agent.
+- **[Universal Core](docs/universal-core.md)**: Deep dive into the Rust architecture.
+- **[Python Client](docs/python-client.md)**: Usage guide for Python developers.
+- **[Tools & Skills](docs/tools.md)**: Creating and registering custom tools.
 
-To run the documentation site locally:
+---
+
+## 🚀 Quick Start (Python)
+
+Ensure you have [Rust](https://rustup.rs/) installed, then build the core:
 
 ```bash
-bun run docs:dev
+bash build.sh
+```
+
+### Run Marie in Python:
+
+```python
+from marie.agent import MarieAgent
+from marie.tools import ShellTool
+
+agent = MarieAgent(api_key="sk-...", safe_mode=True)
+agent.register_tool(ShellTool()) # Needs safe_mode=False to execute
+
+response = agent.chat("Marie, check my disk usage.")
+print(response)
 ```
 
 ---
 
-## ✨ Key Features
+## 🚀 Quick Start (TypeScript)
 
-- 🚀 **Lightning Fast**: Built on Bun with zero runtime dependencies.
-- 🧠 **Associative Memory**: Advanced STM/LTM fact extraction out-of-the-box.
-- 💰 **Built-in Cost Control**: Semantic caching, model routing, and hard budgets.
-- 🛡️ **Safe Mode**: Granular tool permissions for secure autonomy.
-- 📦 **Stateless & Scalable**: Production-ready ESM module with multi-user isolation.
-- 📱 **Telegram Ready**: Built-in adapter for stateful streaming bots.
-
----
-
-## 🚀 Installation
-
-Install @grandpaej/marie directly via GitHub:
+Marie is built for **Bun** for maximum performance.
 
 ```bash
 bun add https://github.com/GrandpaEJ/Marie.git
 ```
-
-### Quick Start
 
 ```typescript
 import { Agent } from "@grandpaej/marie";
@@ -53,9 +68,23 @@ const agent = new Agent({
 });
 
 const response = await agent.chat("Hello Marie!");
-for await (const chunk of response) {
-  process.stdout.write(chunk);
-}
+console.log(response);
+```
+
+---
+
+## 🛠 Building for Development
+
+To build the documentation site locally:
+
+```bash
+bun run docs:dev
+```
+
+To rebuild the Rust Core and bindings:
+
+```bash
+bash build.sh
 ```
 
 ---
