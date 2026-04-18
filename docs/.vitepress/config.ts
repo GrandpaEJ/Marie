@@ -9,6 +9,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'The Book', link: '/introduction' },
+      { text: 'Encyclopedia', link: '/api-encyclopedia' },
       { text: 'GitHub', link: 'https://github.com/GrandpaEJ/Marie' }
     ],
     sidebar: [
@@ -45,9 +46,10 @@ export default defineConfig({
         ]
       },
       {
-        text: 'API Reference',
+        text: 'Reference',
         items: [
-          { text: 'Configuration', link: '/api-reference' },
+          { text: 'Quick API Lookup', link: '/api-reference' },
+          { text: 'API Encyclopedia', link: '/api-encyclopedia' },
         ]
       }
     ],
