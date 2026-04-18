@@ -1,16 +1,15 @@
 use std::sync::Mutex;
 use std::collections::HashMap;
-use crate::models::*;
+use crate::models::{Budget, ToolDefinition, Metrics};
 
 #[derive(uniffi::Object)]
 pub struct MarieBrain {
-    pub(crate) history: Mutex<Vec<Message>>,
-    pub(crate) budget: Budget,
-    pub(crate) total_tokens: Mutex<u32>,
-    pub(crate) total_cost: Mutex<f64>,
-    pub(crate) steps: Mutex<u32>,
-    pub(crate) tools: Mutex<HashMap<String, ToolDefinition>>,
-    pub(crate) safe_mode: bool,
+    budget: Budget,
+    total_tokens: Mutex<u32>,
+    total_cost: Mutex<f64>,
+    steps: Mutex<u32>,
+    tools: Mutex<HashMap<String, ToolDefinition>>,
+    safe_mode: bool,
 }
 
 #[uniffi::export]
@@ -18,7 +17,6 @@ impl MarieBrain {
     #[uniffi::constructor]
     pub fn new(budget: Budget, safe_mode: bool) -> Self {
         Self {
-            history: Mutex::new(Vec::new()),
             budget,
             total_tokens: Mutex::new(0),
             total_cost: Mutex::new(0.0),
@@ -53,15 +51,6 @@ impl MarieBrain {
         false
     }
 
-    pub fn add_message(&self, msg: Message) {
-        let mut history = self.history.lock().unwrap();
-        history.push(msg);
-    }
-
-    pub fn get_history(&self) -> Vec<Message> {
-        self.history.lock().unwrap().clone()
-    }
-
     pub fn track_usage(&self, tokens: u32, cost_usd: f64) -> bool {
         let mut total_tokens = self.total_tokens.lock().unwrap();
         let mut total_cost = self.total_cost.lock().unwrap();
@@ -71,7 +60,6 @@ impl MarieBrain {
         *total_cost += cost_usd;
         *steps += 1;
 
-        // Budget Enforcements
         if let Some(max) = self.budget.max_tokens {
             if *total_tokens > max { return false; }
         }
@@ -81,7 +69,6 @@ impl MarieBrain {
         if let Some(max) = self.budget.max_steps {
             if *steps > max { return false; }
         }
-
         true
     }
 

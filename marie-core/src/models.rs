@@ -2,9 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(uniffi::Enum, Clone, Copy, Debug, Serialize, Deserialize, Eq, Hash, PartialEq)]
 pub enum ModelTier {
-    Nano,
-    Fast,
-    Frontier,
+    Nano, Fast, Frontier,
 }
 
 #[derive(uniffi::Record, Clone, Serialize, Deserialize)]
@@ -44,10 +42,12 @@ pub struct Metrics {
     pub steps: u32,
 }
 
-#[derive(uniffi::Record, Clone, Serialize, Deserialize)]
-pub struct ModelMeta {
-    pub name: String,
-    pub tier: ModelTier,
-    pub input_cost_1k: f64,
-    pub output_cost_1k: f64,
+#[derive(uniffi::Error, Debug, thiserror::Error)]
+pub enum MarieError {
+    #[error("Network error: {0}")]
+    Network(String),
+    #[error("LLM error: {0}")]
+    Llm(String),
+    #[error("Internal error: {0}")]
+    Internal(String),
 }
