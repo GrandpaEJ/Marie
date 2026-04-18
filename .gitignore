@@ -9,3 +9,14 @@ bun.lockb
 *.sqlite*docs/.vitepress/cache
 docs/.vitepress/cache
 docs/.vitepress/dist
+
+# Rust
+target/
+marie-core/target/
+
+# UniFFI / Shared Libs
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
