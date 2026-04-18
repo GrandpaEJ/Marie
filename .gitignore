@@ -20,3 +20,4 @@ marie-core/target/
 *.dylib
 *.a
 *.lib
+__pycache__/
