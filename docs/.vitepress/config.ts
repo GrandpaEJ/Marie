@@ -2,33 +2,52 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: "Marie v1",
-  description: "Minimal, fast agent library for Bun",
+  description: "The high-performance, cost-optimized agent framework for Bun.",
+  cleanUrls: true,
   themeConfig: {
     logo: '/logo.png',
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Guide', link: '/getting-started' },
+      { text: 'The Book', link: '/introduction' },
       { text: 'GitHub', link: 'https://github.com/GrandpaEJ/Marie' }
     ],
     sidebar: [
       {
-        text: 'Introduction',
+        text: 'The Basics',
         items: [
+          { text: 'Introduction', link: '/introduction' },
           { text: 'Getting Started', link: '/getting-started' },
+          { text: 'The Agent', link: '/the-agent' },
+          { text: 'Skills & Tools', link: '/tools' },
         ]
       },
       {
-        text: 'Core Concepts',
+        text: 'The Mind (Memory)',
         items: [
           { text: 'Associative Memory', link: '/memory' },
-          { text: 'Tools & Skills', link: '/tools' },
-          { text: 'Persistence', link: '/persistence' },
+          { text: 'Multi-User Isolation', link: '/memory#multi-user-scoping' },
+          { text: 'Persistence Adapters', link: '/persistence' },
         ]
       },
       {
-        text: 'Advanced',
+        text: 'Economy & Speed',
         items: [
-          { text: 'Multi-Agent Orchestration', link: '/orchestration' },
+          { text: 'Model Routing', link: '/economics' },
+          { text: 'Semantic Caching', link: '/economics#semantic-caching' },
+          { text: 'Budget Enforcement', link: '/economics#budgets' },
+        ]
+      },
+      {
+        text: 'Orchestration',
+        items: [
+          { text: 'Multi-Agent Teams', link: '/orchestration' },
+          { text: 'Telegram Tutorial', link: '/telegram-tutorial' },
+        ]
+      },
+      {
+        text: 'API Reference',
+        items: [
+          { text: 'Configuration', link: '/api-reference' },
         ]
       }
     ],

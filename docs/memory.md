@@ -1,56 +1,49 @@
 # Associative Memory
 
-Marie uses a sophisticated, multi-layered memory architecture designed to mimic human cognitive processes (STM vs LTM). This goes beyond simple RAG by extracting **facts** and **preferences** automatically.
+Marie uses a unique **Associative Memory** system that mimics human cognitive architecture. Rather than just storing a list of past messages, Marie extracts **Facts** and **Summaries** to keep the context relevant and the token cost low.
 
-## Memory Architecture
+## The Dual-Layer System
 
 ### 1. Short-Term Memory (STM)
-A sliding window of recent conversation turns.
-- **Verbatim**: The last few turns are kept exactly as they happened.
-- **Summarization**: Older turns are compressed into bullet points or paragraphs to save tokens.
-- **Auto-Forget**: Once a conversation reaches a certain length, the oldest summaries are dropped to keep context window costs stable.
+STM handles the immediate context of the conversation.
+- **Sliding Window**: It keeps the last $N$ turns verbatim for perfect recall of recent context.
+- **Recursive Summarization**: As the conversation grows, older messages are compressed into summaries (bullets or paragraphs).
+- **Graceful Decay**: When the summary stack gets too tall, the oldest summaries are dropped, preventing infinite token growth while preserving "essence".
 
 ### 2. Long-Term Memory (LTM)
-A persistent, categorized fact store.
-- **Fact Extraction**: Every user message is analyzed (via heuristic or LLM) to extract nodes like "User lives in Dhaka" or "User prefers TypeScript".
-- **Relational SQL**: Facts are stored in indexed SQLite tables, allowing for sub-5ms retrieval.
-- **Associative Search**: When a user asks a question, Marie performs a semantic search over the LTM to pull in relevant facts as context.
+LTM acts as a permanent, categorized knowledge base about the user.
+- **Declarative Extraction**: Every user message is passed to an `Extractor` that identifies permanent facts (e.g., "User is a Go developer").
+- **Relational Storage**: Facts are stored in a normalized SQLite schema with metadata (importance, timestamps, usage counts).
+- **Associative Retrieval**: Before each turn, Marie queries the LTM for facts relevant to the current user input and injects them as a "Preamble".
 
-## How to Use
+---
 
-Simply register the `Memory` instance via the `MemoryMiddleware`:
+## The Lifecycle of a Fact
 
-```typescript
-import { Memory, SQLiteAdapter, createMemoryMiddleware } from "@grandpaej/marie";
+1.  **Ingestion**: User says "Actually, I prefer Bun over Node."
+2.  **Extraction**: The `MemoryMiddleware` identifies this as a preference category fact.
+3.  **Deduplication**: Marie checks the LTM for existing facts about "Bun" or "preferences" to avoid duplicates.
+4.  **Consolidation**: The fact is stored in the `ltm_nodes` table, tagged with the `userId`.
+5.  **Reactivation**: Next week, the user asks "What runtime should I use?". Marie searches LTM, finds the "prefers Bun" fact, and injects it into the LLM prompt.
 
-const memory = new Memory({
-  persist: new SQLiteAdapter("my-memory.sqlite"),
-  maxStmSummaries: 3,
-});
-
-// Load existing memory
-await memory.load();
-
-const agent = new Agent({
-  // ... config
-  middleware: [
-    createMemoryMiddleware(memory)
-  ]
-});
-```
+---
 
 ## Multi-User Scoping
 
-In production (e.g., a Telegram bot), you have many users. Marie handles this via `userId` scoping:
+In production environments (like a Telegram bot), isolation is critical. Marie solves this via **Metadata Scoping**.
 
 ```typescript
-// When running the agent, pass the userId in metadata
-await agent.chat("Hi!", { 
-  metadata: { userId: "user_123" } 
+// Pass the owner's ID in the chat call
+await agent.chat("Remember my name?", {
+  metadata: { userId: "user_789" }
 });
 ```
 
-Marie will automatically:
-1. Only inject facts belonging to `user_123`.
-2. Only add new extracted facts to `user_123`'s bucket.
-3. Keep `user_123`'s conversation summary isolated from others.
+The memory system will automatically:
+-   **Retrieve** only facts tagged with `user_789`.
+-   **Summarize** only the conversation history for `user_789`.
+-   **Store** new facts with the `user_789` ownership tag.
+
+## Performance Note
+
+Marie's memory uses **Bun's native SQLite** with **Write-Ahead Logging (WAL)**. Retrieval of relevant facts generally takes **< 10ms**, even with thousands of users and tens of thousands of facts.
