@@ -1,6 +1,6 @@
 # 🕊️ Marie v1
 
-**Marie** is a high-performance, cost-optimized agent framework built for **Bun**. It is designed to be the "perfect" agent: scalable, easy to manage, low cost, and high value.
+**Marie** (@grandpaej/marie) is a high-performance, cost-optimized agent framework built for **Bun**. It is designed to be the "perfect" agent: scalable, easy to manage, low cost, and high value.
 
 ## 📚 Documentation
 
@@ -24,27 +24,33 @@ bun run docs:dev
 - 🧠 **Associative Memory**: Advanced STM/LTM fact extraction out-of-the-box.
 - 💰 **Built-in Cost Control**: Semantic caching, model routing, and hard budgets.
 - 🛡️ **Safe Mode**: Granular tool permissions for secure autonomy.
--  Paket **Stateless & Scalable**: Production-ready ESM module with multi-user isolation.
+- 📦 **Stateless & Scalable**: Production-ready ESM module with multi-user isolation.
 - 📱 **Telegram Ready**: Built-in adapter for stateful streaming bots.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Installation
+
+Install @grandpaej/marie directly via GitHub:
 
 ```bash
-bun install marie
+bun add https://github.com/GrandpaEJ/Marie.git
 ```
 
+### Quick Start
+
 ```typescript
-import { Agent } from "marie";
+import { Agent } from "@grandpaej/marie";
 
 const agent = new Agent({
   model: "gpt-4o",
   apiKey: process.env.AI_API_KEY
 });
 
-const response = await agent.run("Hello Marie!");
-console.log(response);
+const response = await agent.chat("Hello Marie!");
+for await (const chunk of response) {
+  process.stdout.write(chunk);
+}
 ```
 
 ---

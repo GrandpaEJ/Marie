@@ -10,7 +10,7 @@ Marie provides two ultra-fast, zero-dependency adapters out-of-the-box using Bun
 Uses Bun's native lightning-fast `bun:sqlite` with relational tables for easy external querying.
 
 ```typescript
-import { SQLiteAdapter } from "silvi";
+import { SQLiteAdapter } from "@grandpaej/marie";
 
 const adapter = new SQLiteAdapter("memories.sqlite");
 ```
@@ -19,7 +19,7 @@ const adapter = new SQLiteAdapter("memories.sqlite");
 A simple, human-readable file fallback that uses `Bun.file()`.
 
 ```typescript
-import { JSONAdapter } from "silvi";
+import { JSONAdapter } from "@grandpaej/marie";
 
 const adapter = new JSONAdapter("memories.json");
 ```
@@ -29,7 +29,7 @@ const adapter = new JSONAdapter("memories.json");
 To use MongoDB, PostgreSQL, redis, or others, simply implement the `save` and `load` methods.
 
 ```typescript
-import { MemoryPersist, MemorySnapshot } from "silvi";
+import { MemoryPersist, MemorySnapshot } from "@grandpaej/marie";
 
 class MyCustomAdapter implements MemoryPersist {
   async save(snapshot: MemorySnapshot) {

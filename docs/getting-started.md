@@ -4,12 +4,10 @@ Learn how to build your first high-performance agent with **Marie**.
 
 ## 1. Installation
 
-Ensure you have [Bun](https://bun.sh) installed, then clone the repository:
+Install Marie via GitHub:
 
 ```bash
-git clone https://github.com/GrandpaEJ/Marie.git
-cd Marie
-bun install
+bun add https://github.com/GrandpaEJ/Marie.git
 ```
 
 ## 2. Configuration
@@ -28,7 +26,7 @@ TG_TOKEN=your_telegram_bot_token (optional)
 Create a file named `my-agent.ts`:
 
 ```typescript
-import { Agent } from "./src/index.ts";
+import { Agent } from "@grandpaej/marie";
 
 const agent = new Agent({
   model: process.env.AI_MODEL!,

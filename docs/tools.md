@@ -7,7 +7,7 @@ Marie agents find their power by interacting with the real world through **Tools
 Marie comes with several production-ready tools in the `tools/` directory.
 
 ```typescript
-import { webFetch, shellExec, fileWrite } from "silvi/tools";
+import { webFetch, shellExec, fileWrite } from "@grandpaej/marie/tools";
 
 const agent = new Agent({ ... })
   .register(webFetch)
@@ -19,7 +19,7 @@ const agent = new Agent({ ... })
 Creating a tool is simple. You just define its schema and a handler function.
 
 ```typescript
-import { Tool } from "silvi";
+import { Tool } from "@grandpaej/marie";
 
 const myTool: Tool = {
   name: "get_weather",

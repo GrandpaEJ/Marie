@@ -21,7 +21,7 @@ A persistent, categorized fact store.
 Simply register the `Memory` instance via the `MemoryMiddleware`:
 
 ```typescript
-import { Memory, SQLiteAdapter, createMemoryMiddleware } from "silvi";
+import { Memory, SQLiteAdapter, createMemoryMiddleware } from "@grandpaej/marie";
 
 const memory = new Memory({
   persist: new SQLiteAdapter("my-memory.sqlite"),
