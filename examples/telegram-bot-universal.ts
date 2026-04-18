@@ -7,9 +7,11 @@
  *  - Native SQLite: High-performance memory storage without JS overhead.
  */
 
-import { MarieAgent } from "../clients/js/marie";
+import { MarieAgent } from "../clients/js/marie.ts";
+import { webFetch, googleSearch } from "../tools/web.ts";
 // Note: We'll use a simple fetch-based listener to avoid external dependencies for this universal demo
 const TG_TOKEN = process.env.TG_TOKEN;
+const BASE_URL = process.env.AI_BASE_URL;
 const API_KEY = process.env.AI_API_KEY;
 
 if (!TG_TOKEN) {
@@ -25,15 +27,22 @@ function getAgentForUser(userId: number): MarieAgent {
     console.log(`🤖 Creating new Rust agent for user ${userId}...`);
     const agent = new MarieAgent({
       api_key: API_KEY,
+      base_url: BASE_URL,
+      model: process.env.AI_MODEL, // Falls back to Rust core's default if undefined
       user_id: `tg_${userId}`,
       persistence: {
         mode: "sqlite",
         path: "marie-telegram-rust.sqlite"
       },
       budget: {
-        max_steps: 5
+        max_steps: 15
       }
     });
+
+    // Register JS Fallback Tools
+    agent.addTool(webFetch);
+    agent.addTool(googleSearch);
+
     agents.set(userId, agent);
   }
   return agents.get(userId)!;

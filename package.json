@@ -35,6 +35,16 @@
     "typedoc-plugin-markdown": "^4.11.0",
     "vitepress": "^1.6.4"
   },
-  "keywords": ["agent", "llm", "marie", "bun", "advanced-rag", "memory"],
-  "license": "MIT"
+  "keywords": [
+    "agent",
+    "llm",
+    "marie",
+    "bun",
+    "advanced-rag",
+    "memory"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "koffi": "^2.16.1"
+  }
 }

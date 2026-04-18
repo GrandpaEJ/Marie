@@ -12,16 +12,37 @@ use crate::interfaces::ToolExecutor;
 // Opaque pointer for the Agent
 pub struct AgentPtr(Arc<MarieAgent>);
 
-/// Default implementation of ToolExecutor for FFI
-struct FfiToolExecutor;
-impl ToolExecutor for FfiToolExecutor {
-    fn execute(&self, _name: String, _args: String) -> String {
-        format!("Error: Tool execution not implemented in raw FFI yet. Please use the host bridge for tool logic.")
+/// Callback type for host tool execution: char* (name, args)
+type ToolCallback = extern "C" fn(*const c_char, *const c_char) -> *mut c_char;
+
+struct FfiHostExecutor {
+    callback: ToolCallback,
+}
+
+unsafe impl Send for FfiHostExecutor {}
+unsafe impl Sync for FfiHostExecutor {}
+
+impl ToolExecutor for FfiHostExecutor {
+    fn execute(&self, name: String, args: String) -> String {
+        let c_name = CString::new(name).unwrap();
+        let c_args = CString::new(args).unwrap();
+        
+        let result_ptr = (self.callback)(c_name.as_ptr(), c_args.as_ptr());
+        if result_ptr.is_null() {
+            return "Error: Host tool execution returned null".to_string();
+        }
+        
+        let result_cstr = unsafe { CStr::from_ptr(result_ptr) };
+        let result = result_cstr.to_string_lossy().into_owned();
+        
+        // We don't free the host's pointer here to avoid allocator mismatch. 
+        // High-level bridges should handle their own cleanup if necessary.
+        result
     }
 }
 
 #[no_mangle]
-pub extern "C" fn marie_create_agent(config_json: *const c_char) -> *mut AgentPtr {
+pub extern "C" fn marie_create_agent(config_json: *const c_char, callback: Option<ToolCallback>) -> *mut AgentPtr {
     let c_str = unsafe {
         if config_json.is_null() { return std::ptr::null_mut(); }
         CStr::from_ptr(config_json)
@@ -38,8 +59,8 @@ pub extern "C" fn marie_create_agent(config_json: *const c_char) -> *mut AgentPt
     };
 
     let api_key = config["api_key"].as_str().unwrap_or("sk-dummy").to_string();
-    let base_url = config["base_url"].as_str().unwrap_or("https://openrouter.ai/api/v1").to_string();
-    let model = config["model"].as_str().unwrap_or("openrouter/free").to_string();
+    let base_url = config["base_url"].as_str().unwrap_or("https://zero-bot.net/api/ai/v1").to_string();
+    let model = config["model"].as_str().unwrap_or("openai/gpt-oss-120b").to_string();
     let safe_mode = config["safe_mode"].as_bool().unwrap_or(true);
     let user_id = config["user_id"].as_str().map(|s| s.to_string());
 
@@ -74,16 +95,47 @@ pub extern "C" fn marie_create_agent(config_json: *const c_char) -> *mut AgentPt
         user_id,
     ));
 
+    let host_executor: Option<Box<dyn ToolExecutor>> = callback.map(|cb| {
+        let exec: Box<dyn ToolExecutor> = Box::new(FfiHostExecutor { callback: cb });
+        exec
+    });
+
     let agent = Arc::new(MarieAgent::new(
         client,
         brain,
         memory,
         None,
-        Box::new(FfiToolExecutor),
+        host_executor,
         model,
     ));
 
     Box::into_raw(Box::new(AgentPtr(agent)))
+}
+
+#[no_mangle]
+pub extern "C" fn marie_register_host_tool(agent_ptr: *mut AgentPtr, tool_json: *const c_char) -> bool {
+    let agent = unsafe {
+        if agent_ptr.is_null() { return false; }
+        &mut *agent_ptr
+    };
+
+    let c_str = unsafe {
+        if tool_json.is_null() { return false; }
+        CStr::from_ptr(tool_json)
+    };
+
+    let json_str = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+
+    let definition: crate::models::ToolDefinition = match serde_json::from_str(json_str) {
+        Ok(v) => v,
+        Err(_) => return false,
+    };
+
+    agent.0.brain().register_tool(definition);
+    true
 }
 
 #[no_mangle]

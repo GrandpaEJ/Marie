@@ -5,6 +5,7 @@ use crate::client::LlmClient;
 use crate::memory::SlidingWindowMemory;
 use crate::routing::ModelRouter;
 use crate::interfaces::ToolExecutor;
+use crate::tools::ToolRegistry;
 
 #[derive(uniffi::Object)]
 pub struct MarieAgent {
@@ -12,7 +13,8 @@ pub struct MarieAgent {
     brain: Arc<MarieBrain>,
     memory: Arc<SlidingWindowMemory>,
     router: Option<Arc<ModelRouter>>,
-    executor: Box<dyn ToolExecutor>,
+    registry: Arc<ToolRegistry>,
+    host_executor: Option<Box<dyn ToolExecutor>>,
     default_model: String,
 }
 
@@ -24,17 +26,35 @@ impl MarieAgent {
         brain: Arc<MarieBrain>,
         memory: Arc<SlidingWindowMemory>,
         router: Option<Arc<ModelRouter>>,
-        executor: Box<dyn ToolExecutor>,
+        host_executor: Option<Box<dyn ToolExecutor>>,
         default_model: String,
     ) -> Self {
+        let mut registry = ToolRegistry::new();
+        
+        // Register default native tools
+        registry.register(Box::new(crate::tools::web_search::WebSearch));
+        registry.register(Box::new(crate::tools::web_fetch::WebFetch));
+        registry.register(Box::new(crate::tools::calculator::Calculator));
+        registry.register(Box::new(crate::tools::shell::Shell));
+
+        // Inject native tool definitions into the brain automatically
+        for def in registry.get_definitions() {
+            brain.register_tool(def);
+        }
+
         Self {
             client,
             brain,
             memory,
             router,
-            executor,
+            registry: Arc::new(registry),
+            host_executor,
             default_model,
         }
+    }
+
+    pub fn brain(&self) -> Arc<MarieBrain> {
+        self.brain.clone()
     }
 
     pub fn chat(&self, user_message: String) -> Result<String, MarieError> {
@@ -46,12 +66,16 @@ impl MarieAgent {
         });
 
         let mut current_step = 0;
+        let max_steps = self.brain.budget().max_steps.unwrap_or(15);
+        let mut tool_call_history: std::collections::HashSet<String> = std::collections::HashSet::new();
+
         loop {
-            if current_step >= 10 {
+            current_step += 1;
+            if current_step > max_steps {
                 return Err(MarieError::Internal("Maximum agent steps reached.".to_string()));
             }
 
-            let has_tools = !self.brain.get_tool_definitions().is_empty();
+            let has_tools = !self.brain.tools().is_empty();
             let model = if let Some(ref r) = self.router {
                 r.route(user_message.clone(), has_tools, self.default_model.clone())
             } else {
@@ -59,7 +83,7 @@ impl MarieAgent {
             };
 
             let history = self.memory.get_history();
-            let tools = self.brain.get_tool_definitions();
+            let tools = self.brain.tools();
 
             let response_msg = self.client.complete(model, history, Some(tools))?;
             self.brain.track_usage(100, 0.001);
@@ -68,11 +92,25 @@ impl MarieAgent {
                 if !calls.is_empty() {
                     self.memory.add(response_msg.clone());
                     for tc in calls {
-                        let result = if !self.brain.is_tool_allowed(tc.name.clone()) {
-                            format!("Error: Tool '{}' is blocked by safe_mode.", tc.name)
+                        // Loop protection: detect repeated calls with same arguments
+                        let call_key = format!("{}:{}", tc.function.name, tc.function.arguments);
+                        if tool_call_history.contains(&call_key) {
+                            return Err(MarieError::Internal(format!("Agent detected an infinite loop with tool '{}'.", tc.function.name)));
+                        }
+                        tool_call_history.insert(call_key);
+
+                        let result = if !self.brain.is_tool_allowed(tc.function.name.clone()) {
+                            format!("Error: Tool '{}' is blocked by safe_mode.", tc.function.name)
+                        } else if let Some(native_tool) = self.registry.get_tool(&tc.function.name) {
+                            // Execute natively in Rust
+                            native_tool.execute(tc.function.arguments.clone())
+                        } else if let Some(ref host) = self.host_executor {
+                            // Delegate to host (Python/JS)
+                            host.execute(tc.function.name.clone(), tc.function.arguments.clone())
                         } else {
-                             self.executor.execute(tc.name.clone(), tc.arguments.clone())
+                            format!("Error: Tool '{}' not found in Rust Registry and no Host Executor provided.", tc.function.name)
                         };
+
                         self.memory.add(Message {
                             role: "tool".to_string(),
                             content: Some(result),
@@ -84,7 +122,10 @@ impl MarieAgent {
                     continue; 
                 }
             }
-            let content = response_msg.content.clone().unwrap_or_default();
+            let mut content = response_msg.content.clone().unwrap_or_default();
+            if content.is_empty() {
+                content = "I'm sorry, I couldn't generate a response for that. Could you try rephrasing?".to_string();
+            }
             self.memory.add(response_msg);
             
             // Auto-save session after successful turn

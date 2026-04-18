@@ -14,6 +14,10 @@ pub struct MarieBrain {
 
 #[uniffi::export]
 impl MarieBrain {
+    pub fn budget(&self) -> Budget {
+        self.budget
+    }
+
     #[uniffi::constructor]
     pub fn new(budget: Budget, safe_mode: bool) -> Self {
         Self {
@@ -29,6 +33,10 @@ impl MarieBrain {
     pub fn register_tool(&self, tool: ToolDefinition) {
         let mut tools = self.tools.lock().unwrap();
         tools.insert(tool.name.clone(), tool);
+    }
+
+    pub fn tools(&self) -> Vec<ToolDefinition> {
+        self.get_tool_definitions()
     }
 
     pub fn get_tool_definitions(&self) -> Vec<ToolDefinition> {

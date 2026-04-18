@@ -43,11 +43,16 @@ impl LlmClient {
         let resp = ureq::post(&format!("{}/chat/completions", self.base_url))
             .set("Authorization", &format!("Bearer {}", self.api_key))
             .set("Content-Type", "application/json")
+            .set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            .set("HTTP-Referer", "https://github.com/GrandpaEJ/Marie")
+            .set("X-Title", "Marie Universal Agent")
             .send_json(body)
             .map_err(|e| MarieError::Network(e.to_string()))?;
 
         if resp.status() != 200 {
-            return Err(MarieError::Llm(format!("Status: {}", resp.status())));
+            let status = resp.status();
+            let body = resp.into_string().unwrap_or_default();
+            return Err(MarieError::Llm(format!("Status: {} - {}", status, body)));
         }
 
         let data: Value = resp.into_json().map_err(|e| MarieError::Internal(e.to_string()))?;
@@ -58,8 +63,11 @@ impl LlmClient {
             Some(choice["tool_calls"].as_array().unwrap().iter().map(|c| {
                 crate::models::ToolCall {
                     id: c["id"].as_str().unwrap_or_default().to_string(),
-                    name: c["function"]["name"].as_str().unwrap_or_default().to_string(),
-                    arguments: c["function"]["arguments"].as_str().unwrap_or_default().to_string(),
+                    call_type: c["type"].as_str().unwrap_or("function").to_string(),
+                    function: crate::models::ToolFunction {
+                        name: c["function"]["name"].as_str().unwrap_or_default().to_string(),
+                        arguments: c["function"]["arguments"].as_str().unwrap_or_default().to_string(),
+                    }
                 }
             }).collect())
         } else {
