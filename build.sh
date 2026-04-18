@@ -12,11 +12,18 @@ cargo run --bin uniffi-bindgen generate --library ./target/release/libmarie_core
 
 echo "📦 Organizing package structure..."
 # Rename marie_core.py to core.py
-mv ../clients/python/marie/marie_core.py ../clients/python/marie/core.py
+if [ -f "../clients/python/marie/marie_core.py" ]; then
+    mv ../clients/python/marie/marie_core.py ../clients/python/marie/core.py
+fi
 
-# Move the .so to the package directory if it's in the parent
-if [ -f "../clients/python/libmarie_core.so" ]; then
-    mv ../clients/python/libmarie_core.so ../clients/python/marie/libmarie_core.so
+# Explicitly copy the shared library from Rust's target directory to the Python package
+# On Linux this is .so, on macOS .dylib, on Windows .dll
+if [ -f "./target/release/libmarie_core.so" ]; then
+    cp ./target/release/libmarie_core.so ../clients/python/marie/libmarie_core.so
+elif [ -f "./target/release/libmarie_core.dylib" ]; then
+    cp ./target/release/libmarie_core.dylib ../clients/python/marie/libmarie_core.so
+elif [ -f "./target/release/marie_core.dll" ]; then
+    cp ./target/release/marie_core.dll ../clients/python/marie/libmarie_core.so
 fi
 
 echo "✅ Done! Modular refactor complete."
