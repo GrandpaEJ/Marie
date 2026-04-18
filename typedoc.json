@@ -9,5 +9,6 @@
   "hideBreadcrumbs": true,
   "hidePageTitle": true,
   "entryModule": "@grandpaej/marie",
+  "entryFileName": "index.md",
   "exclude": ["examples/**/*"]
 }
