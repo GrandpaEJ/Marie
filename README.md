@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="docs/public/banner.png" alt="Marie Logo" width="800">
+</div>
+
 # 🕊️ Marie v1
 
 **Marie** (@grandpaej/marie) is a high-performance, cost-optimized agent framework built for **Bun**. It is designed to be the "perfect" agent: scalable, easy to manage, low cost, and high value.
