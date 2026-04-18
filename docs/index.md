@@ -1,32 +1,31 @@
----
-layout: home
+# Marie AI Agent v2 — Universal Core
 
-hero:
-  name: Marie v1
-  text: The High-Performance Agent Library
-  tagline: Zero-dependency, cost-aware, and built for speed on Bun.
-  image:
-    src: /logo.png
-    alt: Marie Logo
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /getting-started
-    - theme: alt
-      text: View on GitHub
-      link: https://github.com/GrandpaEJ/Marie
+Welcome to the documentation for **Marie**, a high-performance, cross-platform AI agent framework built on a **Rust Universal Core**.
 
-features:
-  - title: 🧠 Associative Memory
-    details: Human-like memory architecture with short-term summarization and long-term fact extraction.
-  - title: 💰 Cost Optimized
-    details: Semantic caching, model routing, and hard budgets to keep your LLM tokens under control.
-  - title: 🚀 Pure Bun
-    details: Leverages Bun's native sqlite and file APIs for sub-5ms latency and zero runtime dependencies.
-  - title: 🛡️ Secure by Design
-    details: Granular tool permissions and Safe Mode to prevent destructive actions by autonomous agents.
-  - title: 📱 Production Ready
-    details: Built-in Telegram adapter and multi-user isolation for shipping real products instantly.
-  - title: 💠 Multi-Agent
-    details: Orchestrate complex workflows with Supervisor, Pipeline, and Parallel execution patterns.
+## 🚀 Key Features
+
+- **Universal Core (Rust)**: One brain, many languages. Run the same logic on Python, Node, Android, and iOS.
+- **Strict Budgeting**: Real-time token and cost enforcement in the Rust core.
+- **Safe Mode**: Granular control over tool execution.
+- **Tool-Calling Architecture**: Modular Python-based tools with Rust validation.
+
+## 📚 Table of Contents
+
+- **[Getting Started](getting-started.md)**: Build the core and run your first agent.
+- **[Universal Core (Rust)](universal-core.md)**: Understanding the Rust architecture.
+- **[Python Client](python-client.md)**: Using Marie in Python scripts.
+- **[Memory & Context](memory.md)**: (Draft) Advanced history management.
+- **[Adapters](integrations/facebook.ts)**: Connecting Marie to platforms like Facebook Messenger.
+
+## 🛠 Project Status
+
+| Component | Status | Target |
+| :--- | :--- | :--- |
+| **marie-core** | ✅ Stable | Rust (UniFFI) |
+| **Python Client** | ✅ Stable | Python 3.10+ |
+| **Node.js Client** | 🛠 In Progress | Bun / WASM |
+| **Memory Engine** | 🛠 In Progress | SQLite / Rust |
+
 ---
+
+Marie is designed to be your most reliable, fast, and cost-aware AI companion.
