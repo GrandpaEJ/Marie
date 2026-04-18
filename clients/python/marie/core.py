@@ -27,6 +27,7 @@ import threading
 import itertools
 import traceback
 import typing
+import asyncio
 import platform
 
 # Used for default argument values
@@ -460,9 +461,9 @@ def _uniffi_check_contract_api_version(lib):
         raise InternalError("UniFFI contract version mismatch: try cleaning and rebuilding your project")
 
 def _uniffi_check_api_checksums(lib):
-    if lib.uniffi_marie_core_checksum_method_mariebrain_add_message() != 29838:
+    if lib.uniffi_marie_core_checksum_method_llmclient_complete() != 30007:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_marie_core_checksum_method_mariebrain_get_history() != 7521:
+    if lib.uniffi_marie_core_checksum_method_marieagent_chat() != 412:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_mariebrain_get_metrics() != 41388:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -474,7 +475,25 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_method_mariebrain_track_usage() != 28342:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_modelrouter_route() != 59536:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_slidingwindowmemory_add() != 12411:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_slidingwindowmemory_get_history() != 17386:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_constructor_llmclient_new() != 19069:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_constructor_marieagent_new() != 16838:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_marie_core_checksum_constructor_mariebrain_new() != 6841:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_constructor_modelrouter_new() != 50166:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_constructor_slidingwindowmemory_new() != 42972:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_summarizer_summarize() != 11793:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_marie_core_checksum_method_toolexecutor_execute() != 62012:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -582,6 +601,70 @@ class _UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 _UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiForeignFutureStructVoid,
 )
+_UNIFFI_CALLBACK_INTERFACE_SUMMARIZER_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TOOL_EXECUTOR_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+class _UniffiVTableCallbackInterfaceSummarizer(ctypes.Structure):
+    _fields_ = [
+        ("summarize", _UNIFFI_CALLBACK_INTERFACE_SUMMARIZER_METHOD0),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
+class _UniffiVTableCallbackInterfaceToolExecutor(ctypes.Structure):
+    _fields_ = [
+        ("execute", _UNIFFI_CALLBACK_INTERFACE_TOOL_EXECUTOR_METHOD0),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
+_UniffiLib.uniffi_marie_core_fn_clone_llmclient.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_clone_llmclient.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_free_llmclient.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_free_llmclient.restype = None
+_UniffiLib.uniffi_marie_core_fn_constructor_llmclient_new.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_constructor_llmclient_new.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_method_llmclient_complete.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_marie_core_fn_method_llmclient_complete.restype = ctypes.c_uint64
+_UniffiLib.uniffi_marie_core_fn_clone_marieagent.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_clone_marieagent.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_free_marieagent.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_free_marieagent.restype = None
+_UniffiLib.uniffi_marie_core_fn_constructor_marieagent_new.argtypes = (
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.c_uint64,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_constructor_marieagent_new.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_method_marieagent_chat.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_marie_core_fn_method_marieagent_chat.restype = ctypes.c_uint64
 _UniffiLib.uniffi_marie_core_fn_clone_mariebrain.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -598,17 +681,6 @@ _UniffiLib.uniffi_marie_core_fn_constructor_mariebrain_new.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_marie_core_fn_constructor_mariebrain_new.restype = ctypes.c_void_p
-_UniffiLib.uniffi_marie_core_fn_method_mariebrain_add_message.argtypes = (
-    ctypes.c_void_p,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
-)
-_UniffiLib.uniffi_marie_core_fn_method_mariebrain_add_message.restype = None
-_UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_history.argtypes = (
-    ctypes.c_void_p,
-    ctypes.POINTER(_UniffiRustCallStatus),
-)
-_UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_history.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_metrics.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -638,6 +710,67 @@ _UniffiLib.uniffi_marie_core_fn_method_mariebrain_track_usage.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_marie_core_fn_method_mariebrain_track_usage.restype = ctypes.c_int8
+_UniffiLib.uniffi_marie_core_fn_clone_modelrouter.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_clone_modelrouter.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_free_modelrouter.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_free_modelrouter.restype = None
+_UniffiLib.uniffi_marie_core_fn_constructor_modelrouter_new.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_constructor_modelrouter_new.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_method_modelrouter_route.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.c_int8,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_modelrouter_route.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_marie_core_fn_clone_slidingwindowmemory.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_clone_slidingwindowmemory.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_free_slidingwindowmemory.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_free_slidingwindowmemory.restype = None
+_UniffiLib.uniffi_marie_core_fn_constructor_slidingwindowmemory_new.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_constructor_slidingwindowmemory_new.restype = ctypes.c_void_p
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_add.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_add.restype = None
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_get_history.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_get_history.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_marie_core_fn_init_callback_vtable_summarizer.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfaceSummarizer),
+)
+_UniffiLib.uniffi_marie_core_fn_init_callback_vtable_summarizer.restype = None
+_UniffiLib.uniffi_marie_core_fn_init_callback_vtable_toolexecutor.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfaceToolExecutor),
+)
+_UniffiLib.uniffi_marie_core_fn_init_callback_vtable_toolexecutor.restype = None
 _UniffiLib.ffi_marie_core_rustbuffer_alloc.argtypes = (
     ctypes.c_uint64,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -906,12 +1039,12 @@ _UniffiLib.ffi_marie_core_rust_future_complete_void.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.ffi_marie_core_rust_future_complete_void.restype = None
-_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_add_message.argtypes = (
+_UniffiLib.uniffi_marie_core_checksum_method_llmclient_complete.argtypes = (
 )
-_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_add_message.restype = ctypes.c_uint16
-_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_history.argtypes = (
+_UniffiLib.uniffi_marie_core_checksum_method_llmclient_complete.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_marieagent_chat.argtypes = (
 )
-_UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_history.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_marieagent_chat.restype = ctypes.c_uint16
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_metrics.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_get_metrics.restype = ctypes.c_uint16
@@ -927,9 +1060,36 @@ _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_register_tool.restype = 
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_track_usage.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_method_mariebrain_track_usage.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_modelrouter_route.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_modelrouter_route.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_add.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_add.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_get_history.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_slidingwindowmemory_get_history.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_constructor_llmclient_new.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_constructor_llmclient_new.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_constructor_marieagent_new.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_constructor_marieagent_new.restype = ctypes.c_uint16
 _UniffiLib.uniffi_marie_core_checksum_constructor_mariebrain_new.argtypes = (
 )
 _UniffiLib.uniffi_marie_core_checksum_constructor_mariebrain_new.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_constructor_modelrouter_new.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_constructor_modelrouter_new.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_constructor_slidingwindowmemory_new.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_constructor_slidingwindowmemory_new.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_summarizer_summarize.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_summarizer_summarize.restype = ctypes.c_uint16
+_UniffiLib.uniffi_marie_core_checksum_method_toolexecutor_execute.argtypes = (
+)
+_UniffiLib.uniffi_marie_core_checksum_method_toolexecutor_execute.restype = ctypes.c_uint16
 _UniffiLib.ffi_marie_core_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_marie_core_uniffi_contract_version.restype = ctypes.c_uint32
@@ -1017,11 +1177,199 @@ class _UniffiConverterString:
 
 
 
+class LlmClientProtocol(typing.Protocol):
+    def complete(self, model: "str",messages: "typing.List[Message]",tools: "typing.Optional[typing.List[ToolDefinition]]"):
+        raise NotImplementedError
+
+
+class LlmClient:
+    _pointer: ctypes.c_void_p
+    def __init__(self, api_key: "str",base_url: "str"):
+        _UniffiConverterString.check_lower(api_key)
+        
+        _UniffiConverterString.check_lower(base_url)
+        
+        self._pointer = _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_constructor_llmclient_new,
+        _UniffiConverterString.lower(api_key),
+        _UniffiConverterString.lower(base_url))
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_free_llmclient, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_clone_llmclient, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+    async def complete(self, model: "str",messages: "typing.List[Message]",tools: "typing.Optional[typing.List[ToolDefinition]]") -> "Message":
+        _UniffiConverterString.check_lower(model)
+        
+        _UniffiConverterSequenceTypeMessage.check_lower(messages)
+        
+        _UniffiConverterOptionalSequenceTypeToolDefinition.check_lower(tools)
+        
+        return await _uniffi_rust_call_async(
+            _UniffiLib.uniffi_marie_core_fn_method_llmclient_complete(
+                self._uniffi_clone_pointer(), 
+        _UniffiConverterString.lower(model),
+        _UniffiConverterSequenceTypeMessage.lower(messages),
+        _UniffiConverterOptionalSequenceTypeToolDefinition.lower(tools)
+            ),
+            _UniffiLib.ffi_marie_core_rust_future_poll_rust_buffer,
+            _UniffiLib.ffi_marie_core_rust_future_complete_rust_buffer,
+            _UniffiLib.ffi_marie_core_rust_future_free_rust_buffer,
+            # lift function
+            _UniffiConverterTypeMessage.lift,
+            
+    # Error FFI converter
+_UniffiConverterTypeMarieError,
+
+        )
+
+
+
+
+
+class _UniffiConverterTypeLlmClient:
+
+    @staticmethod
+    def lift(value: int):
+        return LlmClient._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: LlmClient):
+        if not isinstance(value, LlmClient):
+            raise TypeError("Expected LlmClient instance, {} found".format(type(value).__name__))
+
+    @staticmethod
+    def lower(value: LlmClientProtocol):
+        if not isinstance(value, LlmClient):
+            raise TypeError("Expected LlmClient instance, {} found".format(type(value).__name__))
+        return value._uniffi_clone_pointer()
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: LlmClientProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
+
+
+
+class MarieAgentProtocol(typing.Protocol):
+    def chat(self, user_message: "str"):
+        raise NotImplementedError
+
+
+class MarieAgent:
+    _pointer: ctypes.c_void_p
+    def __init__(self, client: "LlmClient",brain: "MarieBrain",memory: "SlidingWindowMemory",router: "typing.Optional[ModelRouter]",executor: "ToolExecutor",default_model: "str"):
+        _UniffiConverterTypeLlmClient.check_lower(client)
+        
+        _UniffiConverterTypeMarieBrain.check_lower(brain)
+        
+        _UniffiConverterTypeSlidingWindowMemory.check_lower(memory)
+        
+        _UniffiConverterOptionalTypeModelRouter.check_lower(router)
+        
+        _UniffiConverterTypeToolExecutor.check_lower(executor)
+        
+        _UniffiConverterString.check_lower(default_model)
+        
+        self._pointer = _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_constructor_marieagent_new,
+        _UniffiConverterTypeLlmClient.lower(client),
+        _UniffiConverterTypeMarieBrain.lower(brain),
+        _UniffiConverterTypeSlidingWindowMemory.lower(memory),
+        _UniffiConverterOptionalTypeModelRouter.lower(router),
+        _UniffiConverterTypeToolExecutor.lower(executor),
+        _UniffiConverterString.lower(default_model))
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_free_marieagent, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_clone_marieagent, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+    async def chat(self, user_message: "str") -> "str":
+        _UniffiConverterString.check_lower(user_message)
+        
+        return await _uniffi_rust_call_async(
+            _UniffiLib.uniffi_marie_core_fn_method_marieagent_chat(
+                self._uniffi_clone_pointer(), 
+        _UniffiConverterString.lower(user_message)
+            ),
+            _UniffiLib.ffi_marie_core_rust_future_poll_rust_buffer,
+            _UniffiLib.ffi_marie_core_rust_future_complete_rust_buffer,
+            _UniffiLib.ffi_marie_core_rust_future_free_rust_buffer,
+            # lift function
+            _UniffiConverterString.lift,
+            
+    # Error FFI converter
+_UniffiConverterTypeMarieError,
+
+        )
+
+
+
+
+
+class _UniffiConverterTypeMarieAgent:
+
+    @staticmethod
+    def lift(value: int):
+        return MarieAgent._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: MarieAgent):
+        if not isinstance(value, MarieAgent):
+            raise TypeError("Expected MarieAgent instance, {} found".format(type(value).__name__))
+
+    @staticmethod
+    def lower(value: MarieAgentProtocol):
+        if not isinstance(value, MarieAgent):
+            raise TypeError("Expected MarieAgent instance, {} found".format(type(value).__name__))
+        return value._uniffi_clone_pointer()
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: MarieAgentProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
+
+
+
 class MarieBrainProtocol(typing.Protocol):
-    def add_message(self, msg: "Message"):
-        raise NotImplementedError
-    def get_history(self, ):
-        raise NotImplementedError
     def get_metrics(self, ):
         raise NotImplementedError
     def get_tool_definitions(self, ):
@@ -1062,26 +1410,6 @@ class MarieBrain:
         inst = cls.__new__(cls)
         inst._pointer = pointer
         return inst
-
-
-    def add_message(self, msg: "Message") -> None:
-        _UniffiConverterTypeMessage.check_lower(msg)
-        
-        _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_mariebrain_add_message,self._uniffi_clone_pointer(),
-        _UniffiConverterTypeMessage.lower(msg))
-
-
-
-
-
-
-    def get_history(self, ) -> "typing.List[Message]":
-        return _UniffiConverterSequenceTypeMessage.lift(
-            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_mariebrain_get_history,self._uniffi_clone_pointer(),)
-        )
-
-
-
 
 
     def get_metrics(self, ) -> "Metrics":
@@ -1167,6 +1495,184 @@ class _UniffiConverterTypeMarieBrain:
 
     @classmethod
     def write(cls, value: MarieBrainProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
+
+
+
+class ModelRouterProtocol(typing.Protocol):
+    def route(self, message: "str",has_tools: "bool",fallback: "str"):
+        raise NotImplementedError
+
+
+class ModelRouter:
+    _pointer: ctypes.c_void_p
+    def __init__(self, nano: "typing.Optional[str]",fast: "typing.Optional[str]",frontier: "typing.Optional[str]",default_tier: "typing.Optional[ModelTier]"):
+        _UniffiConverterOptionalString.check_lower(nano)
+        
+        _UniffiConverterOptionalString.check_lower(fast)
+        
+        _UniffiConverterOptionalString.check_lower(frontier)
+        
+        _UniffiConverterOptionalTypeModelTier.check_lower(default_tier)
+        
+        self._pointer = _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_constructor_modelrouter_new,
+        _UniffiConverterOptionalString.lower(nano),
+        _UniffiConverterOptionalString.lower(fast),
+        _UniffiConverterOptionalString.lower(frontier),
+        _UniffiConverterOptionalTypeModelTier.lower(default_tier))
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_free_modelrouter, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_clone_modelrouter, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def route(self, message: "str",has_tools: "bool",fallback: "str") -> "str":
+        _UniffiConverterString.check_lower(message)
+        
+        _UniffiConverterBool.check_lower(has_tools)
+        
+        _UniffiConverterString.check_lower(fallback)
+        
+        return _UniffiConverterString.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_modelrouter_route,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(message),
+        _UniffiConverterBool.lower(has_tools),
+        _UniffiConverterString.lower(fallback))
+        )
+
+
+
+
+
+
+class _UniffiConverterTypeModelRouter:
+
+    @staticmethod
+    def lift(value: int):
+        return ModelRouter._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: ModelRouter):
+        if not isinstance(value, ModelRouter):
+            raise TypeError("Expected ModelRouter instance, {} found".format(type(value).__name__))
+
+    @staticmethod
+    def lower(value: ModelRouterProtocol):
+        if not isinstance(value, ModelRouter):
+            raise TypeError("Expected ModelRouter instance, {} found".format(type(value).__name__))
+        return value._uniffi_clone_pointer()
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: ModelRouterProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
+
+
+
+class SlidingWindowMemoryProtocol(typing.Protocol):
+    def add(self, message: "Message"):
+        raise NotImplementedError
+    def get_history(self, ):
+        raise NotImplementedError
+
+
+class SlidingWindowMemory:
+    _pointer: ctypes.c_void_p
+    def __init__(self, recent_turns: "typing.Optional[int]",summarizer: "typing.Optional[Summarizer]"):
+        _UniffiConverterOptionalUInt32.check_lower(recent_turns)
+        
+        _UniffiConverterOptionalTypeSummarizer.check_lower(summarizer)
+        
+        self._pointer = _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_constructor_slidingwindowmemory_new,
+        _UniffiConverterOptionalUInt32.lower(recent_turns),
+        _UniffiConverterOptionalTypeSummarizer.lower(summarizer))
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_free_slidingwindowmemory, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_clone_slidingwindowmemory, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def add(self, message: "Message") -> None:
+        _UniffiConverterTypeMessage.check_lower(message)
+        
+        _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_add,self._uniffi_clone_pointer(),
+        _UniffiConverterTypeMessage.lower(message))
+
+
+
+
+
+
+    def get_history(self, ) -> "typing.List[Message]":
+        return _UniffiConverterSequenceTypeMessage.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_marie_core_fn_method_slidingwindowmemory_get_history,self._uniffi_clone_pointer(),)
+        )
+
+
+
+
+
+
+class _UniffiConverterTypeSlidingWindowMemory:
+
+    @staticmethod
+    def lift(value: int):
+        return SlidingWindowMemory._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: SlidingWindowMemory):
+        if not isinstance(value, SlidingWindowMemory):
+            raise TypeError("Expected SlidingWindowMemory instance, {} found".format(type(value).__name__))
+
+    @staticmethod
+    def lower(value: SlidingWindowMemoryProtocol):
+        if not isinstance(value, SlidingWindowMemory):
+            raise TypeError("Expected SlidingWindowMemory instance, {} found".format(type(value).__name__))
+        return value._uniffi_clone_pointer()
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: SlidingWindowMemoryProtocol, buf: _UniffiRustBuffer):
         buf.write_u64(cls.lower(value))
 
 
@@ -1399,6 +1905,287 @@ class _UniffiConverterTypeToolDefinition(_UniffiConverterRustBuffer):
         _UniffiConverterBool.write(value.safe, buf)
 
 
+# MarieError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class MarieError(Exception):
+    pass
+
+_UniffiTempMarieError = MarieError
+
+class MarieError:  # type: ignore
+    class Network(_UniffiTempMarieError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "MarieError.Network({})".format(str(self))
+    _UniffiTempMarieError.Network = Network # type: ignore
+    class Llm(_UniffiTempMarieError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "MarieError.Llm({})".format(str(self))
+    _UniffiTempMarieError.Llm = Llm # type: ignore
+    class Internal(_UniffiTempMarieError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "MarieError.Internal({})".format(str(self))
+    _UniffiTempMarieError.Internal = Internal # type: ignore
+
+MarieError = _UniffiTempMarieError # type: ignore
+del _UniffiTempMarieError
+
+
+class _UniffiConverterTypeMarieError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return MarieError.Network(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return MarieError.Llm(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return MarieError.Internal(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, MarieError.Network):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, MarieError.Llm):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, MarieError.Internal):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, MarieError.Network):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, MarieError.Llm):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, MarieError.Internal):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value._values[0], buf)
+
+
+
+
+
+class ModelTier(enum.Enum):
+    NANO = 0
+    
+    FAST = 1
+    
+    FRONTIER = 2
+    
+
+
+class _UniffiConverterTypeModelTier(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return ModelTier.NANO
+        if variant == 2:
+            return ModelTier.FAST
+        if variant == 3:
+            return ModelTier.FRONTIER
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == ModelTier.NANO:
+            return
+        if value == ModelTier.FAST:
+            return
+        if value == ModelTier.FRONTIER:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == ModelTier.NANO:
+            buf.write_i32(1)
+        if value == ModelTier.FAST:
+            buf.write_i32(2)
+        if value == ModelTier.FRONTIER:
+            buf.write_i32(3)
+
+
+
+
+
+class Summarizer(typing.Protocol):
+    def summarize(self, messages: "typing.List[Message]"):
+        raise NotImplementedError
+# Magic number for the Rust proxy to call using the same mechanism as every other method,
+# to free the callback once it's dropped by Rust.
+_UNIFFI_IDX_CALLBACK_FREE = 0
+# Return codes for callback calls
+_UNIFFI_CALLBACK_SUCCESS = 0
+_UNIFFI_CALLBACK_ERROR = 1
+_UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
+
+class _UniffiCallbackInterfaceFfiConverter:
+    _handle_map = _UniffiHandleMap()
+
+    @classmethod
+    def lift(cls, handle):
+        return cls._handle_map.get(handle)
+
+    @classmethod
+    def read(cls, buf):
+        handle = buf.read_u64()
+        cls.lift(handle)
+
+    @classmethod
+    def check_lower(cls, cb):
+        pass
+
+    @classmethod
+    def lower(cls, cb):
+        handle = cls._handle_map.insert(cb)
+        return handle
+
+    @classmethod
+    def write(cls, cb, buf):
+        buf.write_u64(cls.lower(cb))
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplSummarizer:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_SUMMARIZER_METHOD0
+    def summarize(
+            uniffi_handle,
+            messages,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeSummarizer._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterSequenceTypeMessage.lift(messages), )
+            method = uniffi_obj.summarize
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterString.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypeSummarizer._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfaceSummarizer(
+        summarize,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_marie_core_fn_init_callback_vtable_summarizer(ctypes.byref(_uniffi_vtable))
+
+# The _UniffiConverter which transforms the Callbacks in to Handles to pass to Rust.
+_UniffiConverterTypeSummarizer = _UniffiCallbackInterfaceFfiConverter()
+
+
+
+class ToolExecutor(typing.Protocol):
+    def execute(self, name: "str",args: "str"):
+        raise NotImplementedError
+
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplToolExecutor:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_TOOL_EXECUTOR_METHOD0
+    def execute(
+            uniffi_handle,
+            name,
+            args,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeToolExecutor._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(name), _UniffiConverterString.lift(args), )
+            method = uniffi_obj.execute
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterString.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypeToolExecutor._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfaceToolExecutor(
+        execute,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_marie_core_fn_init_callback_vtable_toolexecutor(ctypes.byref(_uniffi_vtable))
+
+# The _UniffiConverter which transforms the Callbacks in to Handles to pass to Rust.
+_UniffiConverterTypeToolExecutor = _UniffiCallbackInterfaceFfiConverter()
+
+
 
 class _UniffiConverterOptionalUInt32(_UniffiConverterRustBuffer):
     @classmethod
@@ -1481,6 +2268,87 @@ class _UniffiConverterOptionalString(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeModelRouter(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeModelRouter.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeModelRouter.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeModelRouter.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeModelTier(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeModelTier.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeModelTier.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeModelTier.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeSummarizer(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeSummarizer.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeSummarizer.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeSummarizer.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalSequenceTypeToolCall(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -1503,6 +2371,33 @@ class _UniffiConverterOptionalSequenceTypeToolCall(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterSequenceTypeToolCall.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalSequenceTypeToolDefinition(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterSequenceTypeToolDefinition.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterSequenceTypeToolDefinition.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterSequenceTypeToolDefinition.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -1581,15 +2476,85 @@ class _UniffiConverterSequenceTypeToolDefinition(_UniffiConverterRustBuffer):
             _UniffiConverterTypeToolDefinition.read(buf) for i in range(count)
         ]
 
-# Async support
+# Async support# RustFuturePoll values
+_UNIFFI_RUST_FUTURE_POLL_READY = 0
+_UNIFFI_RUST_FUTURE_POLL_MAYBE_READY = 1
+
+# Stores futures for _uniffi_continuation_callback
+_UniffiContinuationHandleMap = _UniffiHandleMap()
+
+_UNIFFI_GLOBAL_EVENT_LOOP = None
+
+"""
+Set the event loop to use for async functions
+
+This is needed if some async functions run outside of the eventloop, for example:
+    - A non-eventloop thread is spawned, maybe from `EventLoop.run_in_executor` or maybe from the
+      Rust code spawning its own thread.
+    - The Rust code calls an async callback method from a sync callback function, using something
+      like `pollster` to block on the async call.
+
+In this case, we need an event loop to run the Python async function, but there's no eventloop set
+for the thread.  Use `uniffi_set_event_loop` to force an eventloop to be used in this case.
+"""
+def uniffi_set_event_loop(eventloop: asyncio.BaseEventLoop):
+    global _UNIFFI_GLOBAL_EVENT_LOOP
+    _UNIFFI_GLOBAL_EVENT_LOOP = eventloop
+
+def _uniffi_get_event_loop():
+    if _UNIFFI_GLOBAL_EVENT_LOOP is not None:
+        return _UNIFFI_GLOBAL_EVENT_LOOP
+    else:
+        return asyncio.get_running_loop()
+
+# Continuation callback for async functions
+# lift the return value or error and resolve the future, causing the async function to resume.
+@_UNIFFI_RUST_FUTURE_CONTINUATION_CALLBACK
+def _uniffi_continuation_callback(future_ptr, poll_code):
+    (eventloop, future) = _UniffiContinuationHandleMap.remove(future_ptr)
+    eventloop.call_soon_threadsafe(_uniffi_set_future_result, future, poll_code)
+
+def _uniffi_set_future_result(future, poll_code):
+    if not future.cancelled():
+        future.set_result(poll_code)
+
+async def _uniffi_rust_call_async(rust_future, ffi_poll, ffi_complete, ffi_free, lift_func, error_ffi_converter):
+    try:
+        eventloop = _uniffi_get_event_loop()
+
+        # Loop and poll until we see a _UNIFFI_RUST_FUTURE_POLL_READY value
+        while True:
+            future = eventloop.create_future()
+            ffi_poll(
+                rust_future,
+                _uniffi_continuation_callback,
+                _UniffiContinuationHandleMap.insert((eventloop, future)),
+            )
+            poll_code = await future
+            if poll_code == _UNIFFI_RUST_FUTURE_POLL_READY:
+                break
+
+        return lift_func(
+            _uniffi_rust_call_with_error(error_ffi_converter, ffi_complete, rust_future)
+        )
+    finally:
+        ffi_free(rust_future)
 
 __all__ = [
     "InternalError",
+    "MarieError",
+    "ModelTier",
     "Budget",
     "Message",
     "Metrics",
     "ToolCall",
     "ToolDefinition",
+    "LlmClient",
+    "MarieAgent",
     "MarieBrain",
+    "ModelRouter",
+    "SlidingWindowMemory",
+    "Summarizer",
+    "ToolExecutor",
 ]
 
