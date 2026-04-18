@@ -2,6 +2,9 @@
 
 This is the exhaustive reference for the **Marie v1** framework. It covers every exported class, method, property, and type for professional development.
 
+> [!TIP]
+> **Pro Tip**: For the most exhaustive, always-synced technical reference generated directly from the source code, see the **[Full API (Auto-Gen)](/api/)**.
+
 [[toc]]
 
 ---

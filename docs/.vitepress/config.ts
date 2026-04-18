@@ -4,12 +4,13 @@ export default defineConfig({
   title: "Marie v1",
   description: "The high-performance, cost-optimized agent framework for Bun.",
   cleanUrls: true,
+  base: '/Marie/',
   themeConfig: {
     logo: '/logo.png',
     nav: [
       { text: 'Home', link: '/' },
       { text: 'The Book', link: '/introduction' },
-      { text: 'Encyclopedia', link: '/api-encyclopedia' },
+      { text: 'API', link: '/api/' },
       { text: 'GitHub', link: 'https://github.com/GrandpaEJ/Marie' }
     ],
     sidebar: [
@@ -50,6 +51,7 @@ export default defineConfig({
         items: [
           { text: 'Quick API Lookup', link: '/api-reference' },
           { text: 'API Encyclopedia', link: '/api-encyclopedia' },
+          { text: 'Full API (Auto-Gen)', link: '/api/' },
         ]
       }
     ],

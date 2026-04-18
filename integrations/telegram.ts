@@ -30,7 +30,7 @@ async function tgPost(token: string, method: string, body: Record<string, unknow
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  return res.json()
+  return (await res.json()) as any
 }
 
 export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): void } {
@@ -50,11 +50,11 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
   async function poll() {
     while (running) {
       try {
-        const res = await tgPost(token, 'getUpdates', {
+        const res = (await tgPost(token, 'getUpdates', {
           offset,
           timeout: 20,
           allowed_updates: ['message'],
-        })
+        })) as any
 
         if (!res.ok || !res.result?.length) {
           await new Promise(r => setTimeout(r, pollMs))
@@ -104,10 +104,10 @@ export function telegramAdapter(agent: Agent, opts: TelegramOptions): { stop(): 
           await tgPost(token, 'sendChatAction', { chat_id: chatId, action: 'typing' })
 
           // Send placeholder message we'll edit as tokens stream in
-          const sentMsg = await tgPost(token, 'sendMessage', {
+          const sentMsg = (await tgPost(token, 'sendMessage', {
             chat_id: chatId,
             text: '⏳ Thinking…',
-          })
+          })) as any
           const msgId = sentMsg.result?.message_id
 
           // Stream response

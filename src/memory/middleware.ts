@@ -28,7 +28,7 @@ export function createMemoryMiddleware(
 
     before(ctx: MiddlewareContext) {
       // 1. Identify owner (userId) from metadata (provided by adapter e.g. Telegram)
-      const userId = ctx.metadata?.userId 
+      const userId = ctx.metadata?.userId as string | undefined
 
       // 2. Find the latest user message for relevance-based retrieval
       for (let i = ctx.messages.length - 1; i >= 0; i--) {
@@ -51,7 +51,7 @@ export function createMemoryMiddleware(
     },
 
     async after(ctx: MiddlewareContext) {
-      const userId = ctx.metadata?.userId
+      const userId = ctx.metadata?.userId as string | undefined
 
       // We look at the last assistant message in ctx.messages
       const lastAssistant = [...ctx.messages].reverse().find(m => m.role === 'assistant')

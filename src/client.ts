@@ -182,7 +182,7 @@ export class LLMClient {
         return res.json()
       })
 
-    const json = await withRetry(doFetch, this.maxRetries)
+    const json = (await withRetry(doFetch, this.maxRetries)) as any
     const msg = json.choices[0].message
     const u = json.usage ?? {}
     return {

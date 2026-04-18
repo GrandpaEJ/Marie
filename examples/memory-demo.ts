@@ -4,9 +4,6 @@
  */
 
 import { Agent, Memory, createMemoryMiddleware, createLogger, SQLiteAdapter } from '../src/index.ts'
-import { config } from 'dotenv'
-
-config()
 
 async function main() {
   console.log('\n🧠 --- Marie Advanced Memory Demo ---\n')
@@ -44,7 +41,6 @@ async function main() {
   
   // Print current LTM stats
   console.log('\n--- Internal Memory State After Session 1 ---')
-  console.log(memory.stats)
   console.table(memory.query('Ebtisam', { limit: 10 }).map(f => ({ category: f.category, fact: f.content })))
   console.log('-------------------------------------------\n')
 

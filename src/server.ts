@@ -82,7 +82,7 @@ export function startServer(agent: Agent, port: number, opts: { apiKey?: string 
 
       let body: ChatBody
       try {
-        body = await req.json()
+        body = (await req.json()) as ChatBody
       } catch {
         return new Response('Invalid JSON', { status: 400, headers: cors })
       }
