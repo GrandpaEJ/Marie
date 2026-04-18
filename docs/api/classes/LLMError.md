@@ -1,4 +1,4 @@
-[**@grandpaej/marie**](../README.md)
+[**@grandpaej/marie**](../index.md)
 
 ***
 

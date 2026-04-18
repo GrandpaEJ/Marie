@@ -4,7 +4,7 @@ export default defineConfig({
   title: "Marie v1",
   description: "The high-performance, cost-optimized agent framework for Bun.",
   cleanUrls: true,
-  base: '/Marie/',
+  base: '/',
   themeConfig: {
     logo: '/logo.png',
     nav: [
