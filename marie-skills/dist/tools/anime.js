@@ -1,33 +1,73 @@
 import { z } from 'zod';
+import { fetch } from 'undici';
 export default {
     name: 'anime',
-    description: 'Search for anime images and information',
+    description: 'Search for anime images by query or category (SFW/NSFW)',
     schema: z.object({
-        query: z.string().describe('The anime name or tags to search for'),
-        limit: z.number().optional().default(1).describe('Number of results to return')
+        query: z.string().optional().describe('Search query for specific characters/tags'),
+        category: z.enum(['neko', 'waifu', 'husbando', 'kitsune', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'slap', 'kill', 'kick', 'happy', 'wink', 'poke', 'dance', 'cringe']).optional().describe('Direct category search'),
+        isNsfw: z.boolean().optional().default(false).describe('Whether to search in NSFW categories'),
+        amount: z.number().max(5).optional().default(1).describe('Number of images to return')
     }),
     parameters: {
         type: 'object',
         properties: {
             query: { type: 'string', description: 'Search query' },
-            limit: { type: 'number', description: 'Result limit' }
-        },
-        required: ['query']
+            category: { type: 'string', enum: ['neko', 'waifu', 'husbando', 'kitsune', 'shinobu', 'megumin', 'bully', 'cuddle', 'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk', 'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold', 'nom', 'bite', 'glomp', 'slap', 'kill', 'kick', 'happy', 'wink', 'poke', 'dance', 'cringe'], description: 'Category' },
+            isNsfw: { type: 'boolean', description: 'NSFW mode' },
+            amount: { type: 'number', description: 'Amount (max 5)' }
+        }
     },
-    handler: async ({ query, limit }) => {
-        // This is a professional mockup. In a real scenario, this would hit an API like Trace.moe or Saucenao.
-        console.log(`[Skill:Anime] Searching for: ${query}`);
-        return {
-            success: true,
-            query,
-            results: [
-                {
-                    title: query,
-                    image: `https://api.example.com/anime/${encodeURIComponent(query)}.jpg`,
-                    description: `A beautiful representation of ${query}.`
-                }
-            ]
-        };
+    handler: async ({ query, category, isNsfw, amount }) => {
+        try {
+            let url;
+            if (query) {
+                // Mode 1: Search by Query (Nekos.best)
+                url = `https://nekos.best/api/v2/search?query=${encodeURIComponent(query)}&type=1&amount=${amount || 1}`;
+            }
+            else if (category) {
+                // Mode 2: Search by Category (Waifu.pics or Nekos.best)
+                const type = isNsfw ? 'nsfw' : 'sfw';
+                url = `https://api.waifu.pics/${type}/${category}`;
+                // Note: Waifu.pics returns a single URL, for multiple we'd need multiple calls or their 'many' endpoint
+            }
+            else {
+                // Fallback: Random Neko
+                url = `https://nekos.best/api/v2/neko?amount=${amount || 1}`;
+            }
+            const response = await fetch(url);
+            if (!response.ok)
+                throw new Error(`API Error: ${response.status}`);
+            const data = await response.json();
+            let results = [];
+            // Unified result mapping
+            if (data.results) {
+                // Nekos.best format
+                results = data.results.map((item) => ({
+                    url: item.url,
+                    artist: item.artist_name || 'Unknown',
+                    source: item.source_url || 'Nekos.best'
+                }));
+            }
+            else if (data.url) {
+                // Waifu.pics single result format
+                results = [{
+                        url: data.url,
+                        artist: 'Unknown',
+                        source: 'Waifu.pics'
+                    }];
+            }
+            return {
+                success: true,
+                mode: query ? 'search' : 'category',
+                category: category || 'general',
+                nsfw: isNsfw,
+                results
+            };
+        }
+        catch (error) {
+            return { success: false, error: error.message };
+        }
     }
 };
 //# sourceMappingURL=anime.js.map

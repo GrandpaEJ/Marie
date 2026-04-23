@@ -3,14 +3,20 @@ declare const _default: {
     name: string;
     description: string;
     schema: z.ZodObject<{
-        query: z.ZodString;
-        limit: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+        query: z.ZodOptional<z.ZodString>;
+        category: z.ZodOptional<z.ZodEnum<["neko", "waifu", "husbando", "kitsune", "shinobu", "megumin", "bully", "cuddle", "cry", "hug", "awoo", "kiss", "lick", "pat", "smug", "bonk", "yeet", "blush", "smile", "wave", "highfive", "handhold", "nom", "bite", "glomp", "slap", "kill", "kick", "happy", "wink", "poke", "dance", "cringe"]>>;
+        isNsfw: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        amount: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     }, "strip", z.ZodTypeAny, {
-        query: string;
-        limit: number;
+        isNsfw: boolean;
+        amount: number;
+        query?: string | undefined;
+        category?: "neko" | "waifu" | "husbando" | "kitsune" | "shinobu" | "megumin" | "bully" | "cuddle" | "cry" | "hug" | "awoo" | "kiss" | "lick" | "pat" | "smug" | "bonk" | "yeet" | "blush" | "smile" | "wave" | "highfive" | "handhold" | "nom" | "bite" | "glomp" | "slap" | "kill" | "kick" | "happy" | "wink" | "poke" | "dance" | "cringe" | undefined;
     }, {
-        query: string;
-        limit?: number | undefined;
+        query?: string | undefined;
+        category?: "neko" | "waifu" | "husbando" | "kitsune" | "shinobu" | "megumin" | "bully" | "cuddle" | "cry" | "hug" | "awoo" | "kiss" | "lick" | "pat" | "smug" | "bonk" | "yeet" | "blush" | "smile" | "wave" | "highfive" | "handhold" | "nom" | "bite" | "glomp" | "slap" | "kill" | "kick" | "happy" | "wink" | "poke" | "dance" | "cringe" | undefined;
+        isNsfw?: boolean | undefined;
+        amount?: number | undefined;
     }>;
     parameters: {
         type: string;
@@ -19,24 +25,40 @@ declare const _default: {
                 type: string;
                 description: string;
             };
-            limit: {
+            category: {
+                type: string;
+                enum: string[];
+                description: string;
+            };
+            isNsfw: {
+                type: string;
+                description: string;
+            };
+            amount: {
                 type: string;
                 description: string;
             };
         };
-        required: string[];
     };
-    handler: ({ query, limit }: {
-        query: string;
-        limit?: number;
+    handler: ({ query, category, isNsfw, amount }: {
+        query?: string;
+        category?: string;
+        isNsfw?: boolean;
+        amount?: number;
     }) => Promise<{
         success: boolean;
-        query: string;
-        results: {
-            title: string;
-            image: string;
-            description: string;
-        }[];
+        mode: string;
+        category: string;
+        nsfw: boolean | undefined;
+        results: any[];
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: any;
+        mode?: undefined;
+        category?: undefined;
+        nsfw?: undefined;
+        results?: undefined;
     }>;
 };
 export default _default;

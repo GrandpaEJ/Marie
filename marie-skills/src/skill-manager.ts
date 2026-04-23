@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
+import { pathToFileURL } from 'url';
 
 export interface ToolDefinition {
   name: string;
@@ -33,8 +34,9 @@ export class SkillManager {
     try {
       const files = await fs.readdir(directoryPath);
       for (const file of files) {
-        if (file.endsWith('.ts') || file.endsWith('.js')) {
-          const toolModule = await import(path.join(directoryPath, file));
+        if (file.endsWith('.js') && !file.endsWith('.d.ts')) {
+          console.log(`[SkillManager] Importing tool: ${file}`);
+          const toolModule = await import(pathToFileURL(path.join(directoryPath, file)).href);
           const tool = toolModule.default || toolModule;
           if (tool && tool.name && tool.handler) {
             this.register(tool);
