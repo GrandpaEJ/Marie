@@ -1,15 +1,23 @@
 {
   "name": "@marie/skills",
   "version": "1.0.0",
-  "description": "Universal skill and tool management system for Marie",
-  "main": "index.js",
+  "description": "Universal skill and tool management system for Marie - MCP Aligned",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "author": "Marie & Grandpa",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GrandpaEJ/Marie.git"
   },
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3"
   }
 }

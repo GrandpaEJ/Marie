@@ -7,7 +7,6 @@ import logger from './utils/logger.js';
 import { LLMProvider } from '@marie/llm';
 import { Brain, CommandRegistry, eventBus, EVENTS } from '@marie/brain';
 import { SkillManager } from '@marie/skills';
-import animeSkill from './skills/anime.js';
 import * as userStore from './storage/user-store.js';
 import * as threadStore from './storage/thread-store.js';
 import db from './storage/db.js';
@@ -27,7 +26,8 @@ async function start() {
     await registry.loadCommands(commandsPath);
 
     const skills = new SkillManager();
-    skills.register(animeSkill);
+    const toolsPath = path.join(process.cwd(), 'marie-skills/dist/tools');
+    await skills.loadTools(toolsPath);
 
     // 3. Setup Storage & Owner
     userStore.ensureOwner(config.owner, "Bot Owner");
