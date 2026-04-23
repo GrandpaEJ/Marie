@@ -1,50 +1,33 @@
 {
-  "name": "@grandpaej/marie",
+  "name": "marie-v1",
   "version": "1.0.0",
   "type": "module",
-  "description": "High-performance, cost-optimized agent framework for Bun",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./tools": "./tools/index.ts",
-    "./integrations": "./integrations/index.ts"
+  "private": true,
+  "bin": {
+    "marie": "./src/index.js"
   },
-  "files": [
-    "src",
-    "tools",
-    "integrations",
-    "package.json",
-    "README.md",
-    "LICENSE"
-  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "dev": "bun run examples/basic.ts",
-    "telegram": "bun run examples/telegram-bot.ts",
-    "memory": "bun run examples/memory-demo.ts",
-    "serve": "bun run src/server.ts",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs",
-    "docs:api": "typedoc",
-    "typecheck": "bun build src/index.ts --target bun --outdir /tmp/marie-check"
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
   },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "typedoc": "^0.28.19",
-    "typedoc-plugin-markdown": "^4.11.0",
-    "vitepress": "^1.6.4"
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "sqlite3"
+    ]
   },
-  "keywords": [
-    "agent",
-    "llm",
-    "marie",
-    "bun",
-    "advanced-rag",
-    "memory"
-  ],
-  "license": "MIT",
   "dependencies": {
-    "koffi": "^2.16.1"
+    "stfca": "file:./login",
+    "openai": "^4.85.4",
+    "better-sqlite3": "^11.8.1",
+    "undici": "^7.3.0",
+    "chalk": "^5.4.1",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2",
+    "js-tiktoken": "^1.0.17",
+    "eventemitter3": "^5.0.1"
   }
 }
