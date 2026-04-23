@@ -1,0 +1,10 @@
+{
+  "name": "@marie/brain",
+  "version": "1.0.0",
+  "description": "Universal AI agent core, command registry, and event system",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "eventemitter3": "^5.0.1"
+  }
+}
