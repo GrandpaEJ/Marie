@@ -1,4 +1,4 @@
-import { upsertFact } from '../storage/memory-store.js';
+import { upsertFact } from './storage.js';
 
 /**
  * Extracts structured facts from the latest user message + assistant response.

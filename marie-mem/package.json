@@ -1,0 +1,10 @@
+{
+  "name": "@marie/memory",
+  "version": "1.0.0",
+  "description": "Multi-tier cognitive memory system for Marie AI Agent",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "js-tiktoken": "^1.0.17"
+  }
+}

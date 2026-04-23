@@ -1,12 +1,23 @@
-import { getFacts, getSummaries, clearThreadMemory, deleteAllFacts, deleteFact } from '../storage/memory-store.js';
-import { countActiveMessages } from '../storage/memory-store.js';
+import {
+  getFacts,
+  getSummaries,
+  clearThreadMemory,
+  deleteAllFacts,
+  deleteFact,
+  countActiveMessages,
+  initStorage
+} from '@marie/memory';
+import db from '../storage/db.js';
+
+// Ensure storage is initialized with main DB
+initStorage(db);
 
 export default {
   name: 'memory',
   aliases: ['mem'],
   description: 'Inspect and manage bot memory',
   usage: '.memory facts [uid] | .memory summaries | .memory clear | .memory forget <id>',
-  minRole: 'admin',
+  minRole: 'owner',
   handler: async (ctx) => {
     const { api, event, args, user, config } = ctx;
     const { threadID, senderID } = event;
@@ -17,7 +28,6 @@ export default {
 
     const sub = args[0].toLowerCase();
 
-    // ── .memory facts [uid] ──────────────────────────────────────────
     if (sub === 'facts') {
       const targetUid = args[1] || senderID;
       const facts = getFacts(targetUid);
@@ -39,7 +49,6 @@ export default {
       return api.sendMessage(msg, threadID);
     }
 
-    // ── .memory summaries ────────────────────────────────────────────
     if (sub === 'summaries' || sub === 'ltm') {
       const summaries = getSummaries(threadID, 10);
 
@@ -55,7 +64,6 @@ export default {
       return api.sendMessage(msg, threadID);
     }
 
-    // ── .memory stats ────────────────────────────────────────────────
     if (sub === 'stats') {
       const activeCount = countActiveMessages(threadID);
       const summaries = getSummaries(threadID, 100);
@@ -68,13 +76,11 @@ export default {
       return api.sendMessage(msg, threadID);
     }
 
-    // ── .memory clear ────────────────────────────────────────────────
     if (sub === 'clear') {
       clearThreadMemory(threadID);
       return api.sendMessage(`[Marie] All memory cleared for this thread (STM + LTM). User facts preserved.`, threadID);
     }
 
-    // ── .memory clearfacts ───────────────────────────────────────────
     if (sub === 'clearfacts') {
       const targetUid = args[1] || senderID;
       if (user.role !== 'owner' && targetUid !== senderID) {
@@ -84,7 +90,6 @@ export default {
       return api.sendMessage(`[Marie] All facts cleared for user ${targetUid}.`, threadID);
     }
 
-    // ── .memory forget <id> ──────────────────────────────────────────
     if (sub === 'forget') {
       const factId = parseInt(args[1]);
       if (isNaN(factId)) {

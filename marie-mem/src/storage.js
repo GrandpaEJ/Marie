@@ -1,4 +1,8 @@
-import db from './db.js';
+let db;
+
+export function initStorage(database) {
+  db = database;
+}
 
 // ─── Facts (Per-User, Global) ───────────────────────────────────────────
 
@@ -109,9 +113,50 @@ export function countActiveMessages(threadId) {
   return row.count;
 }
 
-// ─── Clear All Memory for a Thread ──────────────────────────────────────
+// ─── Professional Search (FTS5 + BM25) ───────────────────────────────────
 
-export function clearThreadMemory(threadId) {
-  db.prepare('DELETE FROM messages WHERE thread_id = ?').run(threadId);
-  db.prepare('DELETE FROM memory_summaries WHERE thread_id = ?').run(threadId);
+/**
+ * Searches for relevant facts using SQLite FTS5.
+ * Uses BM25 ranking to return the most relevant results first.
+ */
+export function searchFacts(uid, query, limit = 10) {
+  if (!query) return [];
+  // Clean query for FTS5
+  const cleanQuery = query.replace(/[^\w\s\u00C0-\u017F]/g, ' ').trim();
+  if (!cleanQuery) return [];
+
+  return db.prepare(`
+    SELECT f.id, f.uid, f.category, f.fact_key, f.fact_value
+    FROM fts_facts fts
+    JOIN memory_facts f ON f.id = fts.rowid
+    WHERE fts.uid = ? AND fts_facts MATCH ?
+    ORDER BY bm25(fts_facts)
+    LIMIT ?
+  `).all(uid, cleanQuery, limit);
+}
+
+/**
+ * Searches for relevant summaries using SQLite FTS5.
+ */
+export function searchSummaries(threadId, query, limit = 5) {
+  if (!query) return [];
+  const cleanQuery = query.replace(/[^\w\s\u00C0-\u017F]/g, ' ').trim();
+  if (!cleanQuery) return [];
+
+  return db.prepare(`
+    SELECT s.*
+    FROM fts_summaries fts
+    JOIN memory_summaries s ON s.id = fts.rowid
+    WHERE fts.thread_id = ? AND fts_summaries MATCH ?
+    ORDER BY bm25(fts_summaries)
+    LIMIT ?
+  `).all(threadId, cleanQuery, limit);
+}
+
+/**
+ * Rebuilds the FTS index from current table content.
+ */
+export function rebuildFts() {
+  db.prepare('INSERT INTO fts_facts(fts_facts) VALUES(\'rebuild\')').run();
+  db.prepare('INSERT INTO fts_summaries(fts_summaries) VALUES(\'rebuild\')').run();
 }
