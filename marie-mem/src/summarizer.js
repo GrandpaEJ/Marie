@@ -1,4 +1,4 @@
-import { addSummary, archiveMessages, getMessagesForSummarization, countActiveMessages } from '../storage/memory-store.js';
+import { addSummary, archiveMessages, getMessagesForSummarization, countActiveMessages } from './storage.js';
 
 const SUMMARIZE_PROMPT = `Summarize the following conversation segment in 2-3 concise sentences.
 Preserve: key events, emotional tone, decisions made, and any important context.
