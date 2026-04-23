@@ -80,6 +80,43 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_summaries_thread ON memory_summaries(thread_id, created);
 
+  -- FTS5 Virtual Tables for Professional Searching (BM25)
+  -- Language-agnostic full-text search
+  CREATE VIRTUAL TABLE IF NOT EXISTS fts_facts USING fts5(
+    uid UNINDEXED,
+    category UNINDEXED,
+    fact_key,
+    fact_value,
+    content='memory_facts',
+    content_rowid='id'
+  );
+
+  CREATE VIRTUAL TABLE IF NOT EXISTS fts_summaries USING fts5(
+    thread_id UNINDEXED,
+    summary,
+    content='memory_summaries',
+    content_rowid='id'
+  );
+
+  -- Triggers to keep FTS in sync
+  CREATE TRIGGER IF NOT EXISTS trg_facts_insert AFTER INSERT ON memory_facts BEGIN
+    INSERT INTO fts_facts(rowid, uid, category, fact_key, fact_value) VALUES (new.id, new.uid, new.category, new.fact_key, new.fact_value);
+  END;
+  CREATE TRIGGER IF NOT EXISTS trg_facts_delete AFTER DELETE ON memory_facts BEGIN
+    INSERT INTO fts_facts(fts_facts, rowid, uid, category, fact_key, fact_value) VALUES('delete', old.id, old.uid, old.category, old.fact_key, old.fact_value);
+  END;
+  CREATE TRIGGER IF NOT EXISTS trg_facts_update AFTER UPDATE ON memory_facts BEGIN
+    INSERT INTO fts_facts(fts_facts, rowid, uid, category, fact_key, fact_value) VALUES('delete', old.id, old.uid, old.category, old.fact_key, old.fact_value);
+    INSERT INTO fts_facts(rowid, uid, category, fact_key, fact_value) VALUES (new.id, new.uid, new.category, new.fact_key, new.fact_value);
+  END;
+
+  CREATE TRIGGER IF NOT EXISTS trg_summaries_insert AFTER INSERT ON memory_summaries BEGIN
+    INSERT INTO fts_summaries(rowid, thread_id, summary) VALUES (new.id, new.thread_id, new.summary);
+  END;
+  CREATE TRIGGER IF NOT EXISTS trg_summaries_delete AFTER DELETE ON memory_summaries BEGIN
+    INSERT INTO fts_summaries(fts_summaries, rowid, thread_id, summary) VALUES('delete', old.id, old.uid, old.summary);
+  END;
+
   -- Token usage analytics
   CREATE TABLE IF NOT EXISTS token_usage (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
