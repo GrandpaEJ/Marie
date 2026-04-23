@@ -1,6 +1,6 @@
 packages:
   - '.'
-  - 'login'
+  - 'marie-fca'
   - 'marie-mem'
   - 'marie-llm'
   - 'marie-brain'
