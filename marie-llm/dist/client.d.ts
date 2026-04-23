@@ -1,6 +1,6 @@
 /**
- * Marie-LLM: 0-Dependency, High-Performance LLM SDK
- * Built with TypeScript and native Fetch.
+ * Marie-LLM: Ultra-High-Performance, 0-Dependency LLM SDK
+ * Optimized with Undici Pool, Request, Caching, and Exponential Backoff.
  */
 export interface Message {
     role: 'system' | 'user' | 'assistant' | 'tool';
@@ -24,10 +24,23 @@ export interface LLMResponse {
 }
 export declare class LLMProvider {
     private apiKey;
-    private baseUrl;
+    private pool;
+    private basePath;
+    private cache;
+    private readonly cacheTTL;
     constructor(apiKey: string, baseUrl?: string);
     /**
-     * Universal Chat Completion
+     * Universal Chat Completion with Caching and Retry logic
      */
     chat(messages: Message[], options?: ChatOptions): Promise<LLMResponse>;
+    /**
+     * Internal fetch with exponential backoff
+     */
+    private fetchWithRetry;
+    /**
+     * Final safety fallback using native global fetch
+     */
+    private nativeFallback;
+    private getCacheKey;
+    destroy(): Promise<void>;
 }
