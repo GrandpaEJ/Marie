@@ -2,12 +2,13 @@
   "name": "marie-v1",
   "version": "1.0.0",
   "type": "module",
+  "license": "BSD-3-Clause",
   "private": true,
   "bin": {
     "marie": "./src/index.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "start": "node src/index.js",
