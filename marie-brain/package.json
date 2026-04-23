@@ -4,6 +4,11 @@
   "description": "Universal AI agent core, command registry, and event system",
   "main": "index.js",
   "type": "module",
+  "author": "Marie & Grandpa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrandpaEJ/Marie.git"
+  },
   "dependencies": {
     "eventemitter3": "^5.0.1"
   }

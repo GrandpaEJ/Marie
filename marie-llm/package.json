@@ -4,6 +4,11 @@
   "description": "Universal LLM provider and prompt utilities for Marie",
   "main": "index.js",
   "type": "module",
+  "author": "Marie & Grandpa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrandpaEJ/Marie.git"
+  },
   "dependencies": {
     "openai": "^4.85.4",
     "js-tiktoken": "^1.0.17"

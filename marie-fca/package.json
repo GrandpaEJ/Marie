@@ -1,7 +1,7 @@
 {
   "name": "@marie/fca",
   "version": "1.0.25",
-  "description": "Unofficial Facebook Chat API for Node.js - Enhanced for Marie AI Agent",
+  "description": "Marie-FCA: Universal Facebook Chat API for Node.js - Professional Edition",
   "main": "index.js",
   "files": [
     "src/",
@@ -15,15 +15,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sheikhtamimlover/ST-FCA.git"
+    "url": "git+https://github.com/GrandpaEJ/Marie.git"
   },
   "keywords": [
+    "marie",
+    "marie-ai",
     "facebook",
     "chat",
     "api",
-    "bot",
     "messenger",
-    "unofficial",
     "fca",
     "marie-fca"
   ],
@@ -32,7 +32,7 @@
   "bugs": {
     "url": "https://github.com/GrandpaEJ/Marie/issues"
   },
-  "homepage": "https://github.com/sheikhtamimlover/ST-FCA#readme",
+  "homepage": "https://github.com/GrandpaEJ/Marie#readme",
   "dependencies": {
     "axios": "^1.8.4",
     "bluebird": "^3.7.2",
