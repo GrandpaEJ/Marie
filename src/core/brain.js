@@ -13,6 +13,8 @@ class Brain {
     const { body, threadID, senderID, messageID } = event;
     if (!body) return;
 
+    console.log(`[Brain] Processing message from ${senderID} in ${threadID}: "${body.slice(0, 50)}..."`);
+
     // 1. Get user and check role
     let user = getUser(senderID);
     if (!user) {
@@ -25,7 +27,7 @@ class Brain {
     const matched = this.registry.findCommand(body);
     if (matched) {
       const { command, args } = matched;
-      
+
       // Check RBAC
       if (command.minRole && !hasPermission(user.role, command.minRole)) {
         return this.api.sendMessage(`[Marie] Permission denied. Required: ${command.minRole}`, threadID);
@@ -52,6 +54,7 @@ class Brain {
 
     // 3. Fallback to RP Chat if enabled
     if (this.config.rp?.enabled) {
+      console.log(`[Brain] Falling back to RP chat...`);
       // We'll handle chat fallback in src/commands/chat.js as a special "fallback" command
       // or just call it directly here. For modularity, let's call a chat handler.
       try {

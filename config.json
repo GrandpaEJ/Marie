@@ -6,7 +6,7 @@
   "llm": {
     "provider": "openrouter",
     "baseUrl": "https://openrouter.ai/api/v1",
-    "defaultModel": "google/gemma-4-26b-a4b-it:free",
+    "defaultModel": "openrouter/free",
     "maxContextTokens": 8192,
     "maxResponseTokens": 1024,
     "temperature": 0.85
