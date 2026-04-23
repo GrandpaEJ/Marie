@@ -5,6 +5,6 @@
   "main": "index.js",
   "type": "module",
   "dependencies": {
-    "js-tiktoken": "^1.0.17"
+    "@marie/llm": "workspace:*"
   }
 }
