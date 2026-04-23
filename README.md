@@ -1,4 +1,5 @@
-<img src="./docs/assets/banner.png">
+<img src="./image.png">
+
 # Marie v1 — Modular AI Agent Platform
 
 Marie is a high-performance, professional-grade AI agent built for the Facebook ecosystem (and beyond). It features a modular monorepo architecture, multi-tier cognitive memory, and a universal processing engine.
@@ -58,7 +59,7 @@ For detailed information on each component, please refer to the READMEs in their
 
 ## 🤝 Credits
 
-- Core developed by **Marie & Grandpa**.
+- Core developed by **[Marie](https://github.com/GrandpaEJ/Marie)** & **[Grandpa EJ](https://github.com/GrandpaEJ)**.
 - Legacy FCA support derived from **stfca/ST-FCA** by Sheikh Tamim.
 
 ---
