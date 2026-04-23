@@ -2,3 +2,5 @@ packages:
   - '.'
   - 'login'
   - 'marie-mem'
+  - 'marie-llm'
+  - 'marie-brain'

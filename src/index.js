@@ -1,36 +1,38 @@
 #!/usr/bin/env node
 
 import fs from 'fs';
-import path from 'path';
 import login from 'stfca';
 import { loadConfig } from './utils/config.js';
 import logger from './utils/logger.js';
-import CommandRegistry from './core/command-registry.js';
-import { getLLMProvider } from './llm/provider.js';
-import Brain from './core/brain.js';
-import { ensureOwner } from './storage/user-store.js';
-import eventBus, { EVENTS } from './core/event-bus.js';
+import { LLMProvider } from '@marie/llm';
+import { Brain, CommandRegistry, eventBus, EVENTS } from '@marie/brain';
+import * as userStore from './storage/user-store.js';
+import * as threadStore from './storage/thread-store.js';
+import db from './storage/db.js';
 
 async function start() {
   try {
-    // 1. Load Config
     logger.info("Starting Marie v1...");
     const config = loadConfig();
     
-    // 2. Initialize LLM
-    const llm = getLLMProvider(config.openrouter_api_key);
+    // 1. Initialize LLM
+    const llm = new LLMProvider(config.openrouter_api_key);
     logger.success("LLM Provider initialized.");
 
-    // 3. Load Commands
+    // 2. Load Commands
     const registry = new CommandRegistry(config.prefix);
-    await registry.loadCommands();
+    const commandsPath = path.join(process.cwd(), 'src/commands');
+    await registry.loadCommands(commandsPath);
 
-    // 4. Login to Facebook
+    // 3. Setup Storage & Owner
+    userStore.ensureOwner(config.owner, "Bot Owner");
+
+    // 4. Facebook Login
     let appState;
     if (fs.existsSync(config.appstate_path)) {
       appState = JSON.parse(fs.readFileSync(config.appstate_path, 'utf8'));
     } else {
-      logger.error(`Appstate not found at ${config.appstate_path}. Please create it.`);
+      logger.error(`Appstate not found at ${config.appstate_path}.`);
       process.exit(1);
     }
 
@@ -42,13 +44,14 @@ async function start() {
 
       logger.success("Connected to Facebook.");
 
-      // 5. Setup Storage & Owner
-      ensureOwner(config.owner, "Bot Owner");
+      // 5. Initialize Brain with dependencies
+      const brain = new Brain(api, registry, llm, config, {
+        userStore,
+        threadStore,
+        db
+      });
 
-      // 6. Initialize Brain
-      const brain = new Brain(api, registry, llm, config);
-
-      // 7. Start Listening
+      // 6. Start Listening
       api.listenMqtt(async (err, event) => {
         if (err) {
           logger.error("Listen error:", err);
@@ -60,7 +63,7 @@ async function start() {
         }
       });
 
-      logger.success(`${config.botName} is online and listening!`);
+      logger.success(`${config.botName} is online!`);
     });
 
   } catch (error) {
@@ -69,7 +72,7 @@ async function start() {
   }
 }
 
-// Handle events for logging
+// Log events
 eventBus.on(EVENTS.COMMAND_EXECUTED, ({ command, threadID }) => {
   logger.command(command, "unknown", threadID);
 });
