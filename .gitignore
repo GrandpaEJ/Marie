@@ -1,30 +1,6 @@
 node_modules/
+data/
 .env
-.env.*
-dist/
+appstate.json
+pnpm-lock.yaml
 *.log
-bun.lockb
-.claude/
-*.sqlite
-*.sqlite*
-
-*.sqlite-shm
-*.sqlite-wal
-
-docs/
-.vitepress/
-cache
-docs/.vitepress/cache
-docs/.vitepress/dist
-
-# Rust
-target/
-marie-core/target/
-
-# UniFFI / Shared Libs
-*.so
-*.dll
-*.dylib
-*.a
-*.lib
-__pycache__/

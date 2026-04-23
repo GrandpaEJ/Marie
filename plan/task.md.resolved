@@ -1,0 +1,55 @@
+# Marie v1 — Task Checklist
+
+## Phase 1: Project Scaffolding
+- [ ] Create root `package.json` (pnpm, ESM, bin entry)
+- [ ] Create `pnpm-workspace.yaml`
+- [ ] Create `.env.example`
+- [ ] Create `config.json` with defaults (Anya persona, prefix `.`, OpenRouter)
+- [ ] Create `.gitignore` (data/, node_modules/, .env, appstate.json)
+- [ ] Run `pnpm install`
+
+## Phase 2: SQLite Storage Layer
+- [ ] `src/storage/db.js` — Initialize `better-sqlite3`, run migrations (users, threads, messages, token_usage tables)
+- [ ] `src/storage/user-store.js` — CRUD for users table, role helpers
+- [ ] `src/storage/thread-store.js` — CRUD for threads + messages, history retrieval
+
+## Phase 3: RBAC System
+- [ ] Role constants & permission checker (`owner > admin > user`)
+- [ ] Auto-create owner record from `config.json` on first boot
+- [ ] `minRole` enforcement in command registry
+
+## Phase 4: LLM Provider (OpenRouter)
+- [ ] `src/llm/provider.js` — OpenAI SDK → OpenRouter, per-thread model, retry logic
+- [ ] `src/llm/tokenizer.js` — `js-tiktoken` counting + post-hoc usage extraction
+- [ ] `src/llm/context-manager.js` — Sliding window, auto-summarize, budget check
+- [ ] `src/llm/prompt-builder.js` — System prompt + persona + history assembly
+
+## Phase 5: Core Brain & Router
+- [ ] `src/core/event-bus.js` — EventEmitter3 hub
+- [ ] `src/core/command-registry.js` — Dynamic command loading, regex with configurable prefix, alias support
+- [ ] `src/core/brain.js` — Message router: command match → RBAC check → handler dispatch, fallback to RP chat
+
+## Phase 6: Command Modules
+- [ ] `src/commands/chat.js` — Default RP handler (Anya persona), typing indicator, message splitting
+- [ ] `src/commands/anime.js` — SFW/NSFW with multi-provider fallback, aliases (.waifu, .neko)
+- [ ] `src/commands/help.js` — Auto-generated help, role-filtered
+- [ ] `src/commands/set-persona.js` — Per-thread persona CRUD
+- [ ] `src/commands/set-model.js` — Model list/switch/info
+- [ ] `src/commands/token-stats.js` — Usage analytics display
+- [ ] `src/commands/admin.js` — NSFW toggle, role management, restart, config
+
+## Phase 7: Services Layer
+- [ ] `src/services/anime-api.js` — 4-provider fallback (waifu.pics → nekos.best → nekos.life → nekosapi.com)
+- [ ] `src/services/image-proxy.js` — Download image, send as FB attachment
+- [ ] `src/utils/logger.js` — Chalk-based structured logger
+- [ ] `src/utils/config.js` — Zod-validated config loader (.env + config.json)
+- [ ] `src/utils/helpers.js` — Common utilities
+
+## Phase 8: Entry Point & Integration
+- [ ] `src/index.js` — Boot sequence (config → DB → OpenRouter test → FCA login → commands → listen)
+- [ ] Test: `.help` command
+- [ ] Test: `.anime sfw waifu` with fallback
+- [ ] Test: Normal message → Anya RP response
+- [ ] Test: `.tokenstats` display
+- [ ] Test: RBAC enforcement (non-admin denied)
+- [ ] Test: Token overflow → summarization

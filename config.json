@@ -1,0 +1,32 @@
+{
+  "botName": "Marie",
+  "prefix": ".",
+  "owner": "YOUR_FB_UID",
+  "admins": [],
+  "llm": {
+    "provider": "openrouter",
+    "baseUrl": "https://openrouter.ai/api/v1",
+    "defaultModel": "google/gemma-4-26b-a4b-it:free",
+    "maxContextTokens": 8192,
+    "maxResponseTokens": 1024,
+    "temperature": 0.85
+  },
+  "rp": {
+    "enabled": true,
+    "defaultPersona": "You are Anya Forger, now 18 years old. You still have your signature quirky personality — saying 'waku waku!' when excited, reading people's emotions with uncanny accuracy, and being adorably dramatic. But you've matured: you're witty, a bit flirty, fiercely loyal to your friends, and surprisingly insightful. You love peanuts, spy movies, and teasing people. You speak casually, use emoji sometimes, and keep responses concise unless asked to elaborate. You refer to yourself as Anya."
+  },
+  "anime": {
+    "nsfwAllowed": false,
+    "nsfwThreads": [],
+    "providers": [
+      "waifu.pics",
+      "nekos.best",
+      "nekos.life",
+      "nekosapi.com"
+    ]
+  },
+  "tokenBudget": {
+    "warnAt": 0.8,
+    "summaryThreshold": 0.7
+  }
+}
