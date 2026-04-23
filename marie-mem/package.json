@@ -4,6 +4,11 @@
   "description": "Multi-tier cognitive memory system for Marie AI Agent",
   "main": "index.js",
   "type": "module",
+  "author": "Marie & Grandpa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrandpaEJ/Marie.git"
+  },
   "dependencies": {
     "@marie/llm": "workspace:*"
   }
