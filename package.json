@@ -20,18 +20,22 @@
     ]
   },
   "dependencies": {
-    "@marie/fca": "workspace:*",
-    "@marie/memory": "workspace:*",
-    "@marie/llm": "workspace:*",
     "@marie/brain": "workspace:*",
+    "@marie/fca": "workspace:*",
+    "@marie/llm": "workspace:*",
+    "@marie/memory": "workspace:*",
     "@marie/skills": "workspace:*",
-    "openai": "^4.85.4",
     "better-sqlite3": "^11.8.1",
-    "undici": "^7.3.0",
     "chalk": "^5.4.1",
     "dotenv": "^16.4.7",
-    "zod": "^3.24.2",
+    "eventemitter3": "^5.0.1",
     "js-tiktoken": "^1.0.17",
-    "eventemitter3": "^5.0.1"
+    "openai": "^4.85.4",
+    "undici": "^7.3.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
   }
 }
