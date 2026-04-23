@@ -64,4 +64,4 @@ For detailed information on each component, please refer to the READMEs in their
 
 ---
 
-License: MIT
+License: [BSD 3-Clause](./LICENSE)
