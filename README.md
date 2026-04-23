@@ -1,3 +1,4 @@
+<img src="./docs/assets/banner.png">
 # Marie v1 — Modular AI Agent Platform
 
 Marie is a high-performance, professional-grade AI agent built for the Facebook ecosystem (and beyond). It features a modular monorepo architecture, multi-tier cognitive memory, and a universal processing engine.
@@ -27,14 +28,17 @@ Marie is divided into several specialized, universal packages:
 ## 🛠️ Getting Started
 
 ### 1. Installation
+
 ```bash
 pnpm install
 ```
 
 ### 2. Configuration
+
 Copy `.env.example` to `.env` and fill in your OpenRouter API Key. Update `config.json` with your owner UID and bot preferences.
 
 ### 3. Run
+
 ```bash
 pnpm run dev
 ```
@@ -44,6 +48,7 @@ pnpm run dev
 ## 📚 Documentation
 
 For detailed information on each component, please refer to the READMEs in their respective directories:
+
 - [Memory System Architecture](./marie-mem/README.md)
 - [LLM & Tokenization](./marie-llm/README.md)
 - [Brain & Command System](./marie-brain/README.md)
@@ -52,6 +57,7 @@ For detailed information on each component, please refer to the READMEs in their
 ---
 
 ## 🤝 Credits
+
 - Core developed by **Marie & Grandpa**.
 - Legacy FCA support derived from **stfca/ST-FCA** by Sheikh Tamim.
 
