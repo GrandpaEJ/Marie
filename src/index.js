@@ -6,6 +6,8 @@ import { loadConfig } from './utils/config.js';
 import logger from './utils/logger.js';
 import { LLMProvider } from '@marie/llm';
 import { Brain, CommandRegistry, eventBus, EVENTS } from '@marie/brain';
+import { SkillManager } from '@marie/skills';
+import animeSkill from './skills/anime.js';
 import * as userStore from './storage/user-store.js';
 import * as threadStore from './storage/thread-store.js';
 import db from './storage/db.js';
@@ -19,10 +21,13 @@ async function start() {
     const llm = new LLMProvider(config.openrouter_api_key);
     logger.success("LLM Provider initialized.");
 
-    // 2. Load Commands
+    // 2. Load Commands & Skills
     const registry = new CommandRegistry(config.prefix);
     const commandsPath = path.join(process.cwd(), 'src/commands');
     await registry.loadCommands(commandsPath);
+
+    const skills = new SkillManager();
+    skills.register(animeSkill);
 
     // 3. Setup Storage & Owner
     userStore.ensureOwner(config.owner, "Bot Owner");
@@ -48,7 +53,8 @@ async function start() {
       const brain = new Brain(api, registry, llm, config, {
         userStore,
         threadStore,
-        db
+        db,
+        skills
       });
 
       // 6. Start Listening

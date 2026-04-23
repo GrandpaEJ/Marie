@@ -4,3 +4,4 @@ packages:
   - 'marie-mem'
   - 'marie-llm'
   - 'marie-brain'
+  - 'marie-skills'
