@@ -22,6 +22,8 @@
   "dependencies": {
     "stfca": "file:./login",
     "@marie/memory": "workspace:*",
+    "@marie/llm": "workspace:*",
+    "@marie/brain": "workspace:*",
     "openai": "^4.85.4",
     "better-sqlite3": "^11.8.1",
     "undici": "^7.3.0",

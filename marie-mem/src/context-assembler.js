@@ -1,4 +1,4 @@
-import { countTokens } from './tokenizer.js';
+import { countTokens } from '@marie/llm';
 
 /**
  * Budget allocation ratios for context tiers.
