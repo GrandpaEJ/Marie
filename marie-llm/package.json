@@ -1,0 +1,11 @@
+{
+  "name": "@marie/llm",
+  "version": "1.0.0",
+  "description": "Universal LLM provider and prompt utilities for Marie",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "openai": "^4.85.4",
+    "js-tiktoken": "^1.0.17"
+  }
+}
