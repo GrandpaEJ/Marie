@@ -20,7 +20,7 @@
     ]
   },
   "dependencies": {
-    "stfca": "file:./login",
+    "@marie/fca": "workspace:*",
     "@marie/memory": "workspace:*",
     "@marie/llm": "workspace:*",
     "@marie/brain": "workspace:*",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'fs';
-import login from 'stfca';
+import login from '@marie/fca';
 import { loadConfig } from './utils/config.js';
 import logger from './utils/logger.js';
 import { LLMProvider } from '@marie/llm';
