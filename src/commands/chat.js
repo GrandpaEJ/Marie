@@ -1,8 +1,13 @@
-import { getThread, addMessage, getHistory, logUsage } from '../storage/thread-store.js';
-import { ContextManager } from '../llm/context-manager.js';
-import { buildSystemPrompt } from '../llm/prompt-builder.js';
+import { MemoryManager } from '../memory/memory-manager.js';
 
-const contextManager = new ContextManager();
+let memoryManager = null;
+
+function getMemoryManager(config) {
+  if (!memoryManager) {
+    memoryManager = new MemoryManager(config);
+  }
+  return memoryManager;
+}
 
 export default {
   name: 'chat',
@@ -10,53 +15,33 @@ export default {
   minRole: 'user',
   handler: async (ctx) => {
     const { api, event, llm, config, user } = ctx;
-    const { threadID, body, messageID } = event;
+    const { threadID, senderID, body, messageID } = event;
 
-    // 1. Get thread config
-    const thread = getThread(threadID);
-    const persona = thread.persona || config.rp.defaultPersona;
-    const model = thread.model || config.llm.defaultModel;
+    // Get sender name from user store or event
+    const senderName = user?.name || event.senderName || null;
 
-    // 2. Show typing indicator
-    const stopTyping = api.sendTypingIndicator(threadID);
+    // 1. Show typing indicator
+    await api.sendTypingIndicator(true, threadID);
 
     try {
-      // 3. Prepare context
-      const systemPrompt = buildSystemPrompt(persona);
-      const rawHistory = getHistory(threadID, 20);
-      
-      const history = rawHistory.map(m => ({
-        role: m.role,
-        content: m.content
-      }));
+      // 2. Build context using MemoryManager
+      const mm = getMemoryManager(config);
+      const { messages, model } = mm.buildContext(threadID, senderID, senderName, body);
 
-      const messages = contextManager.trimHistory(
-        [...history, { role: 'user', content: body }],
-        systemPrompt
-      );
+      console.log(`[Chat] Calling LLM with ${messages.length} messages (model: ${model})...`);
 
-      // 4. Call LLM
+      // 3. Call LLM
       const response = await llm.chat(messages, {
         model: model,
         temperature: config.llm.temperature
       });
 
-      // 5. Store in DB
-      addMessage(threadID, 'user', body);
-      addMessage(threadID, 'assistant', response.content, response.usage?.completion_tokens);
-      
-      // Log usage for analytics
-      logUsage(
-        threadID, 
-        user.uid, 
-        response.model, 
-        response.usage?.prompt_tokens, 
-        response.usage?.completion_tokens,
-        0 // Future: calculate actual cost
-      );
+      console.log(`[Chat] LLM responded with ${response.content.length} chars.`);
 
-      // 6. Send response
-      // Split long messages if necessary (FB limit ~20k, but let's be safe at 2k)
+      // 4. Post-response: store messages, extract facts, maybe summarize
+      await mm.afterResponse(threadID, senderID, body, response, llm);
+
+      // 5. Send response
       if (response.content.length > 2000) {
         const chunks = response.content.match(/[\s\S]{1,2000}/g) || [];
         for (const chunk of chunks) {
@@ -70,7 +55,7 @@ export default {
       console.error("Chat handler error:", error);
       api.sendMessage(`[Marie] Chat error: ${error.message}`, threadID);
     } finally {
-      if (typeof stopTyping === 'function') stopTyping();
+      await api.sendTypingIndicator(false, threadID);
     }
   }
 };

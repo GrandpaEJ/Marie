@@ -25,11 +25,11 @@ export function updateThread(threadId, updates) {
   `).run(...values, threadId);
 }
 
-export function addMessage(threadId, role, content, tokens = 0) {
+export function addMessage(threadId, role, content, tokens = 0, uid = null) {
   db.prepare(`
-    INSERT INTO messages (thread_id, role, content, tokens, timestamp)
-    VALUES (?, ?, ?, ?, unixepoch())
-  `).run(threadId, role, content, tokens);
+    INSERT INTO messages (thread_id, uid, role, content, tokens, timestamp)
+    VALUES (?, ?, ?, ?, ?, unixepoch())
+  `).run(threadId, uid, role, content, tokens);
 }
 
 export function getHistory(threadId, limit = 50) {

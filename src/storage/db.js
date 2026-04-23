@@ -41,13 +41,44 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS messages (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     thread_id TEXT NOT NULL,
+    uid       TEXT,
     role      TEXT NOT NULL CHECK(role IN ('user','assistant','system')),
     content   TEXT NOT NULL,
     tokens    INTEGER DEFAULT 0,
+    archived  INTEGER DEFAULT 0,
     timestamp INTEGER DEFAULT (unixepoch()),
     FOREIGN KEY (thread_id) REFERENCES threads(thread_id)
   );
   CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, timestamp);
+  CREATE INDEX IF NOT EXISTS idx_messages_active ON messages(thread_id, archived, timestamp);
+
+  -- Memory: Per-user facts (global across all threads)
+  CREATE TABLE IF NOT EXISTS memory_facts (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid       TEXT NOT NULL,
+    category  TEXT NOT NULL CHECK(category IN ('name','age','preference','relationship','location','trait','identity','other')),
+    fact_key  TEXT NOT NULL,
+    fact_value TEXT NOT NULL,
+    confidence REAL DEFAULT 1.0,
+    source_thread TEXT,
+    created   INTEGER DEFAULT (unixepoch()),
+    updated   INTEGER DEFAULT (unixepoch()),
+    UNIQUE(uid, category, fact_key)
+  );
+  CREATE INDEX IF NOT EXISTS idx_facts_uid ON memory_facts(uid);
+
+  -- Memory: Per-thread LTM summaries
+  CREATE TABLE IF NOT EXISTS memory_summaries (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    thread_id      TEXT NOT NULL,
+    summary        TEXT NOT NULL,
+    from_timestamp INTEGER NOT NULL,
+    to_timestamp   INTEGER NOT NULL,
+    msg_count      INTEGER DEFAULT 0,
+    created        INTEGER DEFAULT (unixepoch()),
+    FOREIGN KEY (thread_id) REFERENCES threads(thread_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_summaries_thread ON memory_summaries(thread_id, created);
 
   -- Token usage analytics
   CREATE TABLE IF NOT EXISTS token_usage (
