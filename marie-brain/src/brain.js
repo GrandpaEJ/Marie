@@ -18,6 +18,7 @@ class Brain {
     this.llm = llmProvider;
     this.config = config;
     this.userStore = dependencies.userStore;
+    this.skills = dependencies.skills;
   }
 
   async processMessage(event) {
