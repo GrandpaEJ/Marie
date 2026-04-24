@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from 'fs';
+import path from 'path';
 import login from '@marie/fca';
 import { loadConfig } from './utils/config.js';
 import logger from './utils/logger.js';
@@ -57,7 +58,30 @@ async function start() {
         skills
       });
 
-      // 6. Start Listening
+      // --- 6. Assemble Middleware Pipeline ---
+      
+      // 6a. Custom Deduplication Middleware
+      const processedMessages = new Set();
+      brain.use(async (ctx, next) => {
+        const { event } = ctx;
+        if (processedMessages.has(event.messageID)) return;
+        
+        processedMessages.add(event.messageID);
+        if (processedMessages.size > 100) {
+          const first = processedMessages.values().next().value;
+          processedMessages.delete(first);
+        }
+        await next();
+      });
+
+      // 6b. Core Engine Middlewares
+      brain
+        .use(brain.builtins.userFetcher)
+        .use(brain.builtins.globalMode)
+        .use(brain.builtins.commandRouter)
+        .use(brain.builtins.fallbackChat);
+
+      // 7. Start Listening
       api.listenMqtt(async (err, event) => {
         if (err) {
           logger.error("Listen error:", err);

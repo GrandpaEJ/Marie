@@ -1,17 +1,11 @@
 import eventBus, { EVENTS } from './event-bus.js';
+import MiddlewarePipeline from './pipeline.js';
 
 /**
  * Universal Brain for an AI agent.
- * Handles command routing, RBAC, and fallback logic.
+ * Powered by a robust Middleware Pipeline.
  */
 class Brain {
-  /**
-   * @param {Object} api - The messaging API (must have sendMessage)
-   * @param {Object} commandRegistry - Instance of CommandRegistry
-   * @param {Object} llmProvider - Instance of LLMProvider
-   * @param {Object} config - Configuration object
-   * @param {Object} dependencies - { userStore }
-   */
   constructor(api, commandRegistry, llmProvider, config, dependencies = {}) {
     this.api = api;
     this.registry = commandRegistry;
@@ -19,72 +13,130 @@ class Brain {
     this.config = config;
     this.userStore = dependencies.userStore;
     this.skills = dependencies.skills;
+    
+    this.pipeline = new MiddlewarePipeline();
+
+    // Built-in Middlewares for easy registration by the host
+    this.builtins = {
+      userFetcher: this._createUserFetcher(),
+      globalMode: this._createGlobalMode(),
+      commandRouter: this._createCommandRouter(),
+      fallbackChat: this._createFallbackChat()
+    };
   }
 
+  /**
+   * Register a middleware to the Brain's pipeline.
+   */
+  use(middleware) {
+    this.pipeline.use(middleware);
+    return this;
+  }
+
+  /**
+   * Main entry point for incoming events.
+   */
   async processMessage(event) {
     const { body, threadID, senderID } = event;
+
+    // 0. Base anti-loop (always runs before pipeline to prevent catastrophic loops)
+    if (senderID === this.api.getCurrentUserID()) return;
     if (!body) return;
 
-    console.log(`[Brain] Processing message from ${senderID} in ${threadID}: "${body.slice(0, 50)}..."`);
+    // Construct the context object
+    const ctx = {
+      api: this.api,
+      event,
+      args: body.split(/\s+/),
+      config: this.config,
+      llm: this.llm,
+      skills: this.skills,
+      registry: this.registry,
+      user: null // populated by userFetcher
+    };
 
-    // 1. Get user and check role
-    let user = this.userStore ? this.userStore.getUser(senderID) : { uid: senderID, role: 'user' };
-    if (!user) {
-      user = { uid: senderID, role: 'user' };
+    try {
+      await this.pipeline.execute(ctx);
+    } catch (error) {
+      console.error(`[Brain] Pipeline Error:`, error);
     }
+  }
 
-    // 2. Try matching a command
-    const matched = this.registry.findCommand(body);
-    if (matched) {
-      const { command, args } = matched;
+  // --- Built-in Middleware Factories ---
 
-      // Check RBAC
-      if (command.minRole && this.userStore) {
-        if (!this.userStore.hasPermission(user.role, command.minRole)) {
-          return this.api.sendMessage(`[Marie] Permission denied. Required: ${command.minRole}`, threadID);
+  _createUserFetcher() {
+    return async (ctx, next) => {
+      const { senderID } = ctx.event;
+      let user = this.userStore ? this.userStore.getUser(senderID) : { uid: senderID, role: 'user' };
+      if (!user) user = { uid: senderID, role: 'user' };
+      ctx.user = user;
+      await next();
+    };
+  }
+
+  _createGlobalMode() {
+    return async (ctx, next) => {
+      const mode = ctx.config.mode || 'all';
+      const role = ctx.user?.role || 'user';
+      
+      if (mode === 'owner' && role !== 'owner') return;
+      if (mode === 'admins' && role !== 'owner' && role !== 'admin') return;
+      
+      await next();
+    };
+  }
+
+  _createCommandRouter() {
+    return async (ctx, next) => {
+      const { event, user } = ctx;
+      const body = event.body;
+
+      const matched = this.registry.findCommand(body);
+      if (matched) {
+        const { command, args } = matched;
+
+        // Check Command RBAC
+        if (command.minRole && this.userStore) {
+          if (!this.userStore.hasPermission(user.role, command.minRole)) {
+            return ctx.api.sendMessage(`[Marie] Permission denied. Required: ${command.minRole}`, event.threadID);
+          }
         }
+
+        try {
+          ctx.args = args; // Update ctx.args with parsed command args
+          await command.handler(ctx);
+          eventBus.emit(EVENTS.COMMAND_EXECUTED, { command: command.name, threadID: event.threadID });
+        } catch (error) {
+          console.error(`Command error (${command.name}):`, error);
+          ctx.api.sendMessage(`[Marie] Error executing command: ${error.message}`, event.threadID);
+        }
+        
+        // Command intercepted the request, do NOT call next()
+        return; 
       }
 
-      try {
-        const ctx = {
-          api: this.api,
-          event,
-          args,
-          user,
-          config: this.config,
-          llm: this.llm,
-          registry: this.registry
-        };
-        await command.handler(ctx);
-        eventBus.emit(EVENTS.COMMAND_EXECUTED, { command: command.name, threadID });
-      } catch (error) {
-        console.error(`Command error (${command.name}):`, error);
-        this.api.sendMessage(`[Marie] Error executing command: ${error.message}`, threadID);
-      }
-      return;
-    }
+      // Not a command, proceed down the pipeline
+      await next();
+    };
+  }
 
-    // 3. Fallback to RP Chat if enabled
-    if (this.config.rp?.enabled) {
-      console.log(`[Brain] Falling back to RP chat...`);
+  _createFallbackChat() {
+    return async (ctx, next) => {
+      if (!ctx.config.rp?.enabled) return await next();
+
+      console.log(`[Brain] Routing to fallback RP chat...`);
       try {
         const chatHandler = this.registry.commands.get('chat');
         if (chatHandler) {
-          const ctx = {
-            api: this.api,
-            event,
-            args: body.split(/\s+/),
-            user,
-            config: this.config,
-            llm: this.llm,
-            isFallback: true
-          };
+          ctx.isFallback = true;
           await chatHandler.handler(ctx);
         }
       } catch (error) {
         console.error("Chat fallback error:", error);
       }
-    }
+      
+      await next();
+    };
   }
 }
 
