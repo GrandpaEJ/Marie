@@ -2,6 +2,10 @@ import { MemoryManager } from '@marie/memory';
 import db from '../storage/db.js';
 import * as userStore from '../storage/user-store.js';
 import * as threadStore from '../storage/thread-store.js';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import crypto from 'crypto';
 
 let memoryManager = null;
 
@@ -18,10 +22,10 @@ function getMemoryManager(config) {
 
 export default {
   name: 'chat',
-  description: 'Main RP chat handler',
+  description: 'Main RP chat handler with Multi-Mode Tool Support',
   minRole: 'user',
   handler: async (ctx) => {
-    const { api, event, llm, config, user } = ctx;
+    const { api, event, llm, config, user, skills } = ctx;
     const { threadID, senderID, body, messageID } = event;
 
     const senderName = user?.name || event.senderName || null;
@@ -32,24 +36,181 @@ export default {
       const mm = getMemoryManager(config);
       const { messages, model } = mm.buildContext(threadID, senderID, senderName, body);
 
-      console.log(`[Chat] Calling LLM with ${messages.length} messages (model: ${model})...`);
+      const tools = skills ? skills.getOpenAITools() : [];
+      
+      console.log(`[Chat] Calling LLM with ${messages.length} messages and ${tools.length} tools...`);
 
-      const response = await llm.chat(messages, {
+      let response = await llm.chat(messages, {
         model: model,
-        temperature: config.llm.temperature
+        temperature: config.llm.temperature,
+        tools: tools.length > 0 ? tools : undefined
       });
 
-      console.log(`[Chat] LLM responded with ${response.content.length} chars.`);
+      // --- Tool Handling Loop ---
+      let toolCallCount = 0;
+      const MAX_TOOL_CALLS = 5;
+
+      while (toolCallCount < MAX_TOOL_CALLS) {
+        // 1. Check for native tool calls
+        let currentToolCalls = response.toolCalls || [];
+
+        // 2. Check for Hallucinated/Text-based Tool Calls (Fallback for weaker models)
+        if (currentToolCalls.length === 0) {
+          const content = response.content?.trim();
+          if (content && (content.includes('TOOLCALL>') || content.startsWith('{') || content.startsWith('['))) {
+            console.log(`[Chat] Detected potential tool call in content...`);
+            try {
+              let jsonPart = content;
+              if (content.includes('TOOLCALL>')) {
+                jsonPart = content.split('TOOLCALL>')[1].trim();
+              }
+              
+              // Extract the most likely JSON block
+              const jsonMatch = jsonPart.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                const toolArray = Array.isArray(parsed) ? parsed : [parsed];
+                
+                // Validate that it looks like a tool call
+                if (toolArray.length > 0 && (toolArray[0].name || toolArray[0].function)) {
+                  currentToolCalls = toolArray.map((t, i) => ({
+                    id: `hallucinated_${Date.now()}_${i}`,
+                    type: 'function',
+                    function: {
+                      name: t.name || t.function?.name,
+                      arguments: typeof t.arguments === 'string' ? t.arguments : JSON.stringify(t.arguments || t.function?.arguments || {})
+                    }
+                  }));
+                  // Clear the content so we don't print the raw tool call
+                  response.content = content.split(/TOOLCALL>|\[|\{/)[0].trim();
+                }
+              }
+            } catch (e) {
+              // Not a valid tool call, ignore
+            }
+          }
+        }
+
+        if (currentToolCalls.length === 0) break; // No tools to call
+
+        toolCallCount++;
+        console.log(`[Chat] Executing ${currentToolCalls.length} tool calls (Attempt ${toolCallCount})`);
+        
+        // Add assistant turn to history
+        messages.push({
+          role: 'assistant',
+          content: response.content || '',
+          tool_calls: currentToolCalls
+        });
+
+        for (const toolCall of currentToolCalls) {
+          const { name, arguments: argsString } = toolCall.function;
+          let toolResult;
+          
+          try {
+            const args = JSON.parse(argsString);
+            console.log(`[Chat] Calling Tool: ${name} with:`, args);
+            toolResult = await skills.callTool(name, args, { threadID, senderID });
+          } catch (err) {
+            console.error(`[Chat] Tool Error (${name}):`, err.message);
+            toolResult = { success: false, error: err.message };
+          }
+
+          messages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            name: name,
+            content: JSON.stringify(toolResult)
+          });
+        }
+
+        // Call LLM again
+        response = await llm.chat(messages, {
+          model: model,
+          temperature: config.llm.temperature,
+          tools: tools
+        });
+      }
+
+      console.log(`[Chat] Final response received (${response.content?.length || 0} chars).`);
 
       await mm.afterResponse(threadID, senderID, body, response, llm);
 
-      if (response.content.length > 2000) {
-        const chunks = response.content.match(/[\s\S]{1,2000}/g) || [];
-        for (const chunk of chunks) {
-          await api.sendMessage(chunk, threadID, messageID);
+      if (response.content && response.content.length > 0) {
+        let contentToProcess = response.content;
+        const attachments = [];
+        const tempFiles = [];
+
+        // 1. Extract markdown images: ![alt](url)
+        const imageRegex = /!\[.*?\]\((.*?)\)/g;
+        let match;
+        const urlsToDownload = [];
+        
+        while ((match = imageRegex.exec(contentToProcess)) !== null) {
+          if (urlsToDownload.length < 5) { // 1-5 limit
+            urlsToDownload.push(match[1]);
+          }
         }
-      } else {
-        await api.sendMessage(response.content, threadID, messageID);
+
+        // 2. Remove the markdown image syntax from the text to keep it clean
+        let cleanText = contentToProcess.replace(/!\[.*?\]\((.*?)\)/g, '').trim();
+
+        // 3. Download images if any
+        if (urlsToDownload.length > 0) {
+          try {
+            await Promise.all(urlsToDownload.map(async (url) => {
+              const res = await globalThis.fetch(url, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                  'Referer': url
+                }
+              });
+              if (!res.ok) throw new Error(`Failed to fetch ${url} - Status: ${res.status}`);
+              const buffer = Buffer.from(await res.arrayBuffer());
+              
+              // Create temp file
+              const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
+              const tempName = `marie_img_${crypto.randomBytes(4).toString('hex')}.${ext}`;
+              const tempPath = path.join(os.tmpdir(), tempName);
+              
+              fs.writeFileSync(tempPath, buffer);
+              tempFiles.push(tempPath);
+              attachments.push(fs.createReadStream(tempPath));
+            }));
+          } catch (e) {
+            console.error('[Chat] Image download failed:', e.message);
+            // Continue sending text if images fail
+          }
+        }
+
+        // 4. Send Message (with or without attachments)
+        if (cleanText.length > 2000) {
+          const chunks = cleanText.match(/[\s\S]{1,2000}/g) || [];
+          for (let i = 0; i < chunks.length; i++) {
+            const isLast = i === chunks.length - 1;
+            const payload = { body: chunks[i] };
+            if (isLast && attachments.length > 0) {
+              payload.attachment = attachments;
+            }
+            await api.sendMessage(payload, threadID, messageID);
+          }
+        } else {
+          const payload = {};
+          if (cleanText.length > 0) payload.body = cleanText;
+          if (attachments.length > 0) payload.attachment = attachments;
+          
+          if (Object.keys(payload).length > 0) {
+            await api.sendMessage(payload, threadID, messageID);
+          }
+        }
+
+        // 5. Cleanup temp files
+        for (const file of tempFiles) {
+          try {
+            if (fs.existsSync(file)) fs.unlinkSync(file);
+          } catch (e) {}
+        }
       }
 
     } catch (error) {
