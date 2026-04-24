@@ -70,10 +70,14 @@ export async function extractFacts(llm, userMessage, assistantResponse, existing
     if (!Array.isArray(facts)) return [];
 
     // Store each fact
+    const validCategories = ['name', 'age', 'preference', 'relationship', 'location', 'trait', 'identity', 'other'];
     let stored = 0;
     for (const fact of facts) {
       if (fact.category && fact.key && fact.value) {
-        upsertFact(uid, fact.category, fact.key, fact.value, threadId);
+        let cat = fact.category.toLowerCase();
+        if (!validCategories.includes(cat)) cat = 'other';
+        
+        upsertFact(uid, cat, fact.key, fact.value, threadId);
         stored++;
       }
     }
