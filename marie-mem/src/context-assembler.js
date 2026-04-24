@@ -44,6 +44,9 @@ export function assembleContext({
   // ── 1. Identity Layer ──────────────────────────────────────────────────
   let systemContent = persona || 'You are Marie, a helpful AI assistant.';
   if (userName) systemContent += `\n\nYou are currently talking to ${userName}.`;
+  
+  // Tool Hint for non-native models
+  systemContent += `\n\n[CRITICAL] You have access to tools. If your interface doesn't support native tool calling, START YOUR MESSAGE with the JSON tool call and nothing else. Example: {"name": "datetime", "arguments": {}}`;
 
   if (countTokens(systemContent) > budget.identity) {
     const words = systemContent.split(' ');

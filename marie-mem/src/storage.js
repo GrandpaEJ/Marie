@@ -153,6 +153,11 @@ export function searchSummaries(threadId, query, limit = 5) {
   `).all(threadId, cleanQuery, limit);
 }
 
+export function clearThreadMemory(threadId) {
+  db.prepare('DELETE FROM messages WHERE thread_id = ?').run(threadId);
+  db.prepare('DELETE FROM memory_summaries WHERE thread_id = ?').run(threadId);
+}
+
 /**
  * Rebuilds the FTS index from current table content.
  */
