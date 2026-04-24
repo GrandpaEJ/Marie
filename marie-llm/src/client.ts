@@ -10,6 +10,8 @@ export interface Message {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
   name?: string;
+  tool_calls?: any[];
+  tool_call_id?: string;
 }
 
 export interface ChatOptions {
@@ -17,11 +19,14 @@ export interface ChatOptions {
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
+  tools?: any[];
+  tool_choice?: string | object;
 }
 
 export interface LLMResponse {
   content: string;
   model: string;
+  toolCalls?: any[];
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -96,7 +101,9 @@ export class LLMProvider {
             model: options.model || 'openai/gpt-3.5-turbo',
             temperature: options.temperature ?? 0.7,
             max_tokens: options.max_tokens,
-            stream: options.stream ?? false
+            stream: options.stream ?? false,
+            tools: options.tools,
+            tool_choice: options.tool_choice
           })
         });
 
@@ -110,6 +117,7 @@ export class LLMProvider {
         return {
           content: data.choices?.[0]?.message?.content || '',
           model: data.model,
+          toolCalls: data.choices?.[0]?.message?.tool_calls,
           usage: data.usage
         };
       } catch (error: any) {
@@ -147,7 +155,9 @@ export class LLMProvider {
         model: options.model || 'openai/gpt-3.5-turbo',
         temperature: options.temperature ?? 0.7,
         max_tokens: options.max_tokens,
-        stream: options.stream ?? false
+        stream: options.stream ?? false,
+        tools: options.tools,
+        tool_choice: options.tool_choice
       })
     });
 
@@ -159,6 +169,7 @@ export class LLMProvider {
     return {
       content: data.choices?.[0]?.message?.content || '',
       model: data.model,
+      toolCalls: data.choices?.[0]?.message?.tool_calls,
       usage: data.usage
     };
   }

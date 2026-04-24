@@ -6,16 +6,21 @@ export interface Message {
     role: 'system' | 'user' | 'assistant' | 'tool';
     content: string;
     name?: string;
+    tool_calls?: any[];
+    tool_call_id?: string;
 }
 export interface ChatOptions {
     model?: string;
     temperature?: number;
     max_tokens?: number;
     stream?: boolean;
+    tools?: any[];
+    tool_choice?: string | object;
 }
 export interface LLMResponse {
     content: string;
     model: string;
+    toolCalls?: any[];
     usage?: {
         prompt_tokens: number;
         completion_tokens: number;

@@ -59,7 +59,9 @@ export class LLMProvider {
                         model: options.model || 'openai/gpt-3.5-turbo',
                         temperature: options.temperature ?? 0.7,
                         max_tokens: options.max_tokens,
-                        stream: options.stream ?? false
+                        stream: options.stream ?? false,
+                        tools: options.tools,
+                        tool_choice: options.tool_choice
                     })
                 });
                 if (statusCode !== 200) {
@@ -70,6 +72,7 @@ export class LLMProvider {
                 return {
                     content: data.choices?.[0]?.message?.content || '',
                     model: data.model,
+                    toolCalls: data.choices?.[0]?.message?.tool_calls,
                     usage: data.usage
                 };
             }
@@ -105,7 +108,9 @@ export class LLMProvider {
                 model: options.model || 'openai/gpt-3.5-turbo',
                 temperature: options.temperature ?? 0.7,
                 max_tokens: options.max_tokens,
-                stream: options.stream ?? false
+                stream: options.stream ?? false,
+                tools: options.tools,
+                tool_choice: options.tool_choice
             })
         });
         if (!response.ok) {
@@ -115,6 +120,7 @@ export class LLMProvider {
         return {
             content: data.choices?.[0]?.message?.content || '',
             model: data.model,
+            toolCalls: data.choices?.[0]?.message?.tool_calls,
             usage: data.usage
         };
     }
