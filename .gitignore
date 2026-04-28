@@ -4,3 +4,5 @@ data/
 appstate.json
 pnpm-lock.yaml
 *.log
+
+temp/
