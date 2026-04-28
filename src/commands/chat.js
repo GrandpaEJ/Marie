@@ -6,6 +6,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
+import sharp from 'sharp';
+import { fetch } from 'undici';
 
 let memoryManager = null;
 
@@ -23,6 +25,7 @@ function getMemoryManager(config) {
 export default {
   name: 'chat',
   description: 'Main RP chat handler with Multi-Mode Tool Support',
+  commandCategory: 'ai',
   minRole: 'user',
   handler: async (ctx) => {
     const { api, event, llm, config, user, skills } = ctx;
@@ -155,32 +158,33 @@ export default {
         // 2. Remove the markdown image syntax from the text to keep it clean
         let cleanText = contentToProcess.replace(/!\[.*?\]\((.*?)\)/g, '').trim();
 
-        // 3. Download images if any
+        // 3. Download and optimize images if any
         if (urlsToDownload.length > 0) {
           try {
             await Promise.all(urlsToDownload.map(async (url) => {
-              const res = await globalThis.fetch(url, {
+              const res = await fetch(url, {
                 headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                  'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                  'Referer': url
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 }
               });
               if (!res.ok) throw new Error(`Failed to fetch ${url} - Status: ${res.status}`);
               const buffer = Buffer.from(await res.arrayBuffer());
               
               // Create temp file
-              const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
-              const tempName = `marie_img_${crypto.randomBytes(4).toString('hex')}.${ext}`;
+              const tempName = `marie_img_${crypto.randomBytes(4).toString('hex')}.jpg`;
               const tempPath = path.join(os.tmpdir(), tempName);
               
-              fs.writeFileSync(tempPath, buffer);
+              // Optimize with sharp
+              await sharp(buffer)
+                .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+                .jpeg({ quality: 85 })
+                .toFile(tempPath);
+
               tempFiles.push(tempPath);
               attachments.push(fs.createReadStream(tempPath));
             }));
           } catch (e) {
-            console.error('[Chat] Image download failed:', e.message);
-            // Continue sending text if images fail
+            console.error('[Chat] Image download/processing failed:', e.message);
           }
         }
 

@@ -4,6 +4,7 @@ import path from 'path';
 export default {
   name: 'mode',
   description: 'Change the global bot access mode',
+  commandCategory: 'system',
   usage: '.mode <owner|admins|all>',
   minRole: 'owner',
   handler: async (ctx) => {

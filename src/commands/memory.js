@@ -15,7 +15,8 @@ initStorage(db);
 export default {
   name: 'memory',
   aliases: ['mem'],
-  description: 'Inspect and manage bot memory',
+  description: 'Manage AI long-term and short-term memory',
+  commandCategory: 'ai',
   usage: '.memory facts [uid] | .memory summaries | .memory clear | .memory forget <id>',
   minRole: 'owner',
   handler: async (ctx) => {

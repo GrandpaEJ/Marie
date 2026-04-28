@@ -5,8 +5,9 @@ import { getThread } from '../storage/thread-store.js';
 export default {
   name: 'anime',
   aliases: ['waifu', 'neko'],
-  description: 'Get a random anime image',
-  usage: '.anime [sfw|nsfw] [category]',
+  description: 'Get random anime images',
+  commandCategory: 'media',
+  usage: '.anime [type] [category]',
   minRole: 'user',
   handler: async (ctx) => {
     const { api, event, args, user, config } = ctx;
