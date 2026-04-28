@@ -4,6 +4,7 @@ import { setRole } from '../storage/user-store.js';
 export default {
   name: 'admin',
   description: 'Bot administration commands',
+  commandCategory: 'system',
   usage: '.admin nsfw <on|off> | .admin role <uid> <role>',
   minRole: 'admin',
   handler: async (ctx) => {

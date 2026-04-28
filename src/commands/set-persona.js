@@ -2,7 +2,8 @@ import { updateThread, getThread } from '../storage/thread-store.js';
 
 export default {
   name: 'persona',
-  description: 'Change the bot persona for this thread',
+  description: 'Change the AI persona for this thread',
+  commandCategory: 'ai',
   usage: '.persona <text> | .persona reset | .persona show',
   minRole: 'admin', // Admins can change in groups, users in DMs (brain logic handles this)
   handler: async (ctx) => {

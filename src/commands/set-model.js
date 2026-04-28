@@ -3,6 +3,7 @@ import { updateThread, getThread } from '../storage/thread-store.js';
 export default {
   name: 'model',
   description: 'Manage LLM model for this thread',
+  commandCategory: 'ai',
   usage: '.model list | .model set <name> | .model info',
   minRole: 'admin',
   handler: async (ctx) => {

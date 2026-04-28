@@ -2,50 +2,120 @@ import { hasPermission } from '../storage/user-store.js';
 
 export default {
   name: 'help',
-  description: 'Show available commands',
-  usage: '.help [command]',
+  version: '2.1.0',
+  credits: 'Grandpa Academy',
+  description: 'Dynamic & Aesthetic Help Guide',
+  commandCategory: 'system',
+  usage: '.help [page/command]',
+  cooldown: 5,
   minRole: 'user',
   handler: async (ctx) => {
-    const { api, event, args, user, config } = ctx;
-    const { threadID } = event;
+    const { api, event, args, user, config, registry } = ctx;
+    const { threadID, senderID, messageID } = event;
 
-    // This needs access to the registry. 
-    // In brain.js, I pass the whole ctx which includes the registry if I add it.
-    // Wait, I didn't add registry to ctx in brain.js. I should fix that.
+    const prefix = config.prefix || ".";
+    const botName = config.botName || "Marie";
+    const admins = config.admins || [];
+    const commandArg = (args[0] || "").toLowerCase();
+
+    // 1. Filter commands based on user permission
+    const filteredCommands = new Map();
+    const seen = new Set();
     
-    // For now, let's assume we'll fix brain.js to include 'registry' in ctx.
-    const registry = ctx.registry;
-    if (!registry) {
-       return api.sendMessage("[Marie] Error: Command registry not found in context.", threadID);
-    }
+    // Sort commands alphabetically
+    const allCommands = Array.from(registry.commands.values());
+    
+    for (const cmd of allCommands) {
+      if (seen.has(cmd)) continue;
+      seen.add(cmd);
 
-    if (args[0]) {
-      const cmdName = registry.aliases.get(args[0].toLowerCase()) || args[0].toLowerCase();
-      const cmd = registry.commands.get(cmdName);
-      if (cmd) {
-        let helpText = `[ Marie Command Help ]\n`;
-        helpText += `Name: ${cmd.name}\n`;
-        if (cmd.aliases) helpText += `Aliases: ${cmd.aliases.join(', ')}\n`;
-        helpText += `Description: ${cmd.description || 'No description'}\n`;
-        helpText += `Usage: ${cmd.usage || config.prefix + cmd.name}\n`;
-        helpText += `Min Role: ${cmd.minRole || 'user'}`;
-        return api.sendMessage(helpText, threadID);
-      }
-    }
-
-    let msg = `[ Marie Commands ]\n`;
-    msg += `Prefix: ${config.prefix}\n\n`;
-
-    const visibleCommands = [];
-    for (const cmd of registry.commands.values()) {
+      // Map roles to numeric levels for comparison if needed, but hasPermission handles strings
       if (!cmd.minRole || hasPermission(user.role, cmd.minRole)) {
-        visibleCommands.push(`${config.prefix}${cmd.name} - ${cmd.description || ''}`);
+        filteredCommands.set(cmd.name.toLowerCase(), cmd);
       }
     }
 
-    msg += visibleCommands.join('\n');
-    msg += `\n\nUse .help <command> for details.`;
+    // ─── COMMAND DETAILS ───
+    if (commandArg && filteredCommands.has(commandArg)) {
+      const command = filteredCommands.get(commandArg);
+      const raw = command.rawModule || {};
+      const cmdConfig = raw.config || command.config || command;
+      
+      // Determine Command Type
+      let type = "Native";
+      if (raw.run && raw.config && (raw.config.hasPermssion !== undefined || raw.config.commandCategory)) type = "Mirai";
+      else if (raw.onStart && raw.config) type = "Goat";
 
-    api.sendMessage(msg, threadID);
+      let info = `╭━━━[ ${command.name.toUpperCase()} ]━━━╮\n`;
+      info += `📝 Description: ${cmdConfig.description || "No description available"}\n`;
+      info += `🏷️  Category: ${cmdConfig.commandCategory || cmdConfig.category || "General"}\n`;
+      info += `⏱️  Cooldown: ${cmdConfig.cooldowns || cmdConfig.countDown || cmdConfig.cooldown || 0}s\n`;
+      info += `🔒 Permission: ${command.minRole || "user"} (Level ${cmdConfig.hasPermssion ?? cmdConfig.role ?? 0})\n`;
+      info += `📖 Usage: ${prefix}${command.name} ${cmdConfig.usages || cmdConfig.usage || (typeof cmdConfig.guide === 'string' ? cmdConfig.guide : cmdConfig.guide?.en) || ""}\n`;
+      info += `👤 Credits: ${cmdConfig.credits || cmdConfig.author || "Unknown"}\n`;
+      info += `🛠️  Type: ${type}\n`;
+      info += `╰━━━━━━━━━━╯`;
+      return ctx.reply(info.replace(/\{pn\}/g, prefix));
+    }
+
+    // ─── CATEGORY LISTING (PAGINATED) ───
+    const commandList = Array.from(filteredCommands.values());
+    const categories = Array.from(new Set(commandList.map((cmd) => {
+      const cmdConfig = cmd.rawModule?.config || cmd.config || cmd;
+      return cmdConfig.commandCategory || cmdConfig.category || "General";
+    }))).sort();
+    
+    const itemsPerPage = 8;
+    const totalPages = Math.ceil(categories.length / itemsPerPage);
+    let currentPage = 1;
+
+    if (commandArg && !isNaN(parseInt(commandArg))) {
+      const parsedPage = parseInt(commandArg);
+      if (parsedPage >= 1 && parsedPage <= totalPages) {
+        currentPage = parsedPage;
+      }
+    }
+
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = startIdx + itemsPerPage;
+    const visibleCategories = categories.slice(startIdx, endIdx);
+    
+    const numberFont = ["❶","❷","❸","❹","❺","❻","❼","❽","❾","❿"];
+    const numberFontPage = ["➀","➁","➂","➃","➄","➅","➆","➇","➈","➉"];
+
+    let helpMsg = `╔═══════════════╗\n`;
+    helpMsg += `║   🏠 ${botName.toUpperCase()} HELP GUIDE  ║\n`;
+    helpMsg += `╚═══════════════╝\n\n`;
+
+    for (let i = 0; i < visibleCategories.length; i++) {
+      const cat = visibleCategories[i];
+      const catCmds = commandList
+        .filter((cmd) => {
+          const cmdConfig = cmd.rawModule?.config || cmd.config || cmd;
+          return (cmdConfig.commandCategory || cmdConfig.category || "General") === cat;
+        })
+        .map((cmd) => cmd.name)
+        .sort();
+      
+      helpMsg += `╭─── 〔 ${numberFont[i] || (i+1)} ${cat.toUpperCase()} 〕\n`;
+      
+      const grid = config.helpGrid || 2;
+      for (let j = 0; j < catCmds.length; j += grid) {
+        const row = catCmds.slice(j, j + grid);
+        helpMsg += `│ ◗ ✿︎ ${row.join(" ✿︎ ")}\n`;
+      }
+      helpMsg += `╰───\n`;
+    }
+
+    helpMsg += `╭ ──────── ╮\n`;
+    helpMsg += `│ Page ${numberFontPage[currentPage - 1] || currentPage} of ${numberFontPage[totalPages - 1] || totalPages} │\n`;
+    helpMsg += `╰ ──────── ╯\n`;
+    helpMsg += `◖Total: ${filteredCommands.size} commands | ${categories.length} categories◗\n\n`;
+    
+    helpMsg += `💡 Type "${prefix}help [name]" for details.\n`;
+    helpMsg += `💡 Type "${prefix}help [page]" for more pages.\n`;
+    helpMsg += `👤 Owner: fb.com/${admins[0] || "Unknown"}`;
+
+    return ctx.reply(helpMsg);
   }
 };

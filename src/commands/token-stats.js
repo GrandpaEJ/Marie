@@ -4,6 +4,7 @@ export default {
   name: 'tokenstats',
   aliases: ['stats'],
   description: 'View token usage analytics',
+  commandCategory: 'system',
   usage: '.tokenstats [global]',
   minRole: 'user',
   handler: async (ctx) => {
