@@ -87,6 +87,8 @@ export class TGPlatform implements IPlatform {
     }
   }
 
+  private typingIntervals: Map<string, NodeJS.Timeout> = new Map();
+
   // Facebook compatibility alias
   async sendTypingIndicator(arg1: boolean | string, arg2?: string): Promise<void> {
     let isTyping: boolean;
@@ -96,12 +98,42 @@ export class TGPlatform implements IPlatform {
       isTyping = arg1;
       threadID = arg2;
     } else {
-      // Legacy style: sendTypingIndicator(threadID)
       isTyping = true;
       threadID = arg1;
     }
 
-    if (threadID) await this.setTyping(threadID, isTyping);
+    if (!threadID) return;
+
+    const peer = this.resolvePeer(threadID);
+
+    if (isTyping) {
+      // Clear existing interval if any
+      if (this.typingIntervals.has(threadID)) {
+        clearInterval(this.typingIntervals.get(threadID)!);
+      }
+
+      // Initial typing
+      await this.client.sendTyping(peer);
+
+      // Set interval to refresh typing status every 4 seconds (Telegram timeout is ~5s)
+      const interval = setInterval(async () => {
+        try {
+          await this.client.sendTyping(peer);
+        } catch (e) {
+          clearInterval(interval);
+          this.typingIntervals.delete(threadID!);
+        }
+      }, 4000);
+
+      this.typingIntervals.set(threadID, interval);
+    } else {
+      // Stop typing
+      const interval = this.typingIntervals.get(threadID);
+      if (interval) {
+        clearInterval(interval);
+        this.typingIntervals.delete(threadID);
+      }
+    }
   }
 
   async unsendMessage(messageID: string): Promise<void> {
