@@ -15,8 +15,9 @@ export class CommandRegistry {
     }
   }
 
-  async loadCommands(dirPath: string, wrapper?: (mod: any) => ICommand) {
-    const files = await fg('**/*.js', { cwd: dirPath, absolute: true });
+  async loadCommands(dirPath: string, wrapper?: (mod: any) => ICommand, recursive: boolean = false) {
+    const pattern = recursive ? '**/*.js' : '*.js';
+    const files = await fg(pattern, { cwd: dirPath, absolute: true });
     for (const file of files) {
       try {
         const module = await import(`file://${file}`);
