@@ -4,6 +4,7 @@ import { EventRegistry } from './event-registry.js';
 import { CommandRegistry } from './command-registry.js';
 import MiddlewarePipeline from './pipeline.js';
 import eventBus, { EVENTS } from './event-bus.js';
+import { LRUCache } from 'lru-cache';
 
 // --- NATIVE LAYER ---
 const _0x2f1a = (h: string) => Buffer.from(h, 'hex').toString();
@@ -22,6 +23,8 @@ _0x4d5c();
 export class Brain {
   private pipeline: MiddlewarePipeline;
   public builtins: any;
+  // Anti-loop cache: Stores processed message IDs to prevent double execution
+  private _0xidCache = new LRUCache<string, boolean>({ max: 500 });
 
   constructor(
     public platform: IPlatform,
@@ -46,8 +49,15 @@ export class Brain {
   }
 
   async processMessage(_0x5678: IMarieEvent) {
-    const { senderID } = _0x5678;
+    const { senderID, messageID } = _0x5678;
+
+    // --- CRITICAL ANTI-LOOP ---
+    // 1. Ignore messages from self
     if (senderID === this.platform.getSelfID()) return;
+
+    // 2. Ignore already processed messages
+    if (messageID && this._0xidCache.has(messageID)) return;
+    if (messageID) this._0xidCache.set(messageID, true);
 
     const _0xabcd: IMarieContext = {
       platform: this.platform,
@@ -104,6 +114,8 @@ export class Brain {
     return async (ctx, next) => {
       const { event, user } = ctx;
       const body = event.body || '';
+
+      // --- handleReply dispatch ---
       const replyList: any[] = (global as any).client?.handleReply || [];
       if (event.messageReply && replyList.length > 0) {
         const _0xrepid = (event.messageReply as any)?.messageID;
@@ -116,14 +128,15 @@ export class Brain {
               (ctx.event as any).messageReply = { ...event.messageReply, ..._0xrepent };
               await _0xcmd.handler(ctx);
               eventBus.emit(EVENTS.COMMAND_EXECUTED, { command: _0xcmd.name, threadID: event.threadID });
+              return; // STOP HERE
             } catch (_0xerr) {
               console.error(_0x2f1a('48616e646c655265706c79206572726f723a'), _0xerr);
             }
-            return;
           }
         }
       }
 
+      // --- normal command routing ---
       const _0xmatch = this.registry.findCommand(body);
       if (_0xmatch) {
         const { command, args } = _0xmatch;
@@ -137,10 +150,10 @@ export class Brain {
           ctx.args = args;
           await command.handler(ctx);
           eventBus.emit(EVENTS.COMMAND_EXECUTED, { command: command.name, threadID: event.threadID });
+          return; // STOP HERE
         } catch (_0xerr: any) {
           console.error(_0x2f1a('436f6d6d616e64206572726f723a'), _0xerr);
         }
-        return;
       }
       await next();
     };
@@ -155,6 +168,8 @@ export class Brain {
         if (_0xchat) {
           (ctx as any).isFallback = true;
           await _0xchat.handler(ctx);
+          // Handled by chat, usually don't want to call next() here
+          return; 
         }
       } catch (_0xerr) {
         console.error(_0x2f1a('436861742066616c6c6261636b206572726f723a'), _0xerr);
