@@ -26,7 +26,7 @@ export default {
   name: 'chat',
   description: 'Main RP chat handler with Multi-Mode Tool Support',
   commandCategory: 'ai',
-  minRole: 'user',
+  minRole: 'user', // Explicitly allow all users by default; change to 'admin' to restrict
   handler: async (ctx) => {
     const { api, event, llm, config, user, skills } = ctx;
     const { threadID, senderID, body, messageID } = event;
@@ -52,6 +52,7 @@ export default {
       // --- Tool Handling Loop ---
       let toolCallCount = 0;
       const MAX_TOOL_CALLS = 5;
+      const toolResultsHistory = []; // Track tool results to extract images if final response is empty
 
       while (toolCallCount < MAX_TOOL_CALLS) {
         // 1. Check for native tool calls
@@ -89,20 +90,21 @@ export default {
                 }
               }
             } catch (e) {
-              // Not a valid tool call, ignore
+              console.warn('[Chat] Failed to parse hallucinated tool call:', e.message);
             }
           }
         }
 
-        if (currentToolCalls.length === 0) break; // No tools to call
+        if (currentToolCalls.length === 0) break;
 
         toolCallCount++;
-        console.log(`[Chat] Executing ${currentToolCalls.length} tool calls (Attempt ${toolCallCount})`);
-        
+        console.log(`[Chat] Iteration ${toolCallCount}: Processing ${currentToolCalls.length} tool calls...`);
+
         // Add assistant turn to history
+        // Use null for content if empty to be more compliant with some APIs
         messages.push({
           role: 'assistant',
-          content: response.content || '',
+          content: response.content || null,
           tool_calls: currentToolCalls
         });
 
@@ -112,8 +114,10 @@ export default {
           
           try {
             const args = JSON.parse(argsString);
-            console.log(`[Chat] Calling Tool: ${name} with:`, args);
+            console.log(`[Chat] Tool Request: ${name}`, args);
             toolResult = await skills.callTool(name, args, { threadID, senderID });
+            toolResultsHistory.push(toolResult);
+            console.log(`[Chat] Tool Result (${name}):`, JSON.stringify(toolResult).slice(0, 200) + '...');
           } catch (err) {
             console.error(`[Chat] Tool Error (${name}):`, err.message);
             toolResult = { success: false, error: err.message };
@@ -131,11 +135,33 @@ export default {
         response = await llm.chat(messages, {
           model: model,
           temperature: config.llm.temperature,
-          tools: tools
+          tools: tools.length > 0 ? tools : undefined
         });
       }
 
       console.log(`[Chat] Final response received (${response.content?.length || 0} chars).`);
+
+      // If response is empty but we have tool results, check if we can synthesize a response
+      if ((!response.content || response.content.length === 0) && toolResultsHistory.length > 0) {
+        console.log('[Chat] Response empty after tools. Attempting to extract images/urls from tool results...');
+        
+        // Extract URLs from tool results to show something at least
+        const urls = [];
+        const findUrls = (obj) => {
+          if (typeof obj === 'string' && (obj.startsWith('http') && (obj.includes('.jpg') || obj.includes('.png') || obj.includes('.gif') || obj.includes('imgur.com')))) {
+            urls.push(obj);
+          } else if (obj && typeof obj === 'object') {
+            Object.values(obj).forEach(v => findUrls(v));
+          }
+        };
+        
+        toolResultsHistory.forEach(res => findUrls(res));
+        
+        if (urls.length > 0) {
+          response.content = urls.map(u => `![image](${u})`).join('\n');
+          console.log(`[Chat] Synthesized response with ${urls.length} images.`);
+        }
+      }
 
       await mm.afterResponse(threadID, senderID, body, response, llm);
 
