@@ -27,9 +27,22 @@ export class TGPlatform implements IPlatform {
     let attachments: any[] = [];
 
     if (typeof arg1 === 'string') {
-      threadID = arg1;
-      text = arg2;
-      replyTo = arg3;
+      // Smart detection: If arg1 looks like text and arg2 looks like an ID, swap them
+      // IDs are usually numeric or short alphanumeric without spaces
+      const isArg1ID = /^-?\d+$/.test(arg1) || (arg1.length < 20 && !arg1.includes(' '));
+      const isArg2ID = arg2 && (/^-?\d+$/.test(arg2) || (arg2.length < 20 && !arg2.includes(' ')));
+
+      if (!isArg1ID && isArg2ID) {
+        // (text, threadID) style
+        threadID = arg2;
+        text = arg1;
+        replyTo = arg3;
+      } else {
+        // (threadID, text) style
+        threadID = arg1;
+        text = arg2;
+        replyTo = arg3;
+      }
     } else {
       // payload-style (Facebook compatibility)
       const payload = arg1;
