@@ -4,9 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import login from '@marie/fca';
 import { LRUCache } from 'lru-cache';
-import { loadConfig } from './utils/config.js';
-import logger from './utils/logger.js';
-import { LLMProvider } from '@marie/llm';
 import { 
   Brain, 
   CommandRegistry, 
@@ -20,12 +17,16 @@ import {
   wrapMiraiCommand,
   wrapGoatCommand,
   wrapMiraiEvent,
-  wrapGoatEvent
+  wrapGoatEvent,
+  loadConfig,
+  logger,
+  userStore,
+  threadStore,
+  db,
+  LLMProvider,
+  rbac
 } from '@marie/brain';
 import { SkillManager } from '@marie/skills';
-import * as userStore from './storage/user-store.js';
-import * as threadStore from './storage/thread-store.js';
-import db from './storage/db.js';
 
 async function start() {
   try {
@@ -43,11 +44,6 @@ async function start() {
     const registry = new CommandRegistry([config.prefix, '/']);
     const eventRegistry = new EventRegistry();
 
-    // 2. Load Shared Commands (if any remain in src/commands)
-    const nativeCommandsPath = path.join(process.cwd(), 'src/commands');
-    if (fs.existsSync(nativeCommandsPath)) {
-      await registry.loadCommands(nativeCommandsPath);
-    }
 
 
     // 2.6 Load Skills
@@ -206,8 +202,7 @@ async function start() {
       });
 
       brain.use(brain.builtins.userFetcher);
-      const rbac = await import('./middlewares/rbac.js');
-      brain.use(rbac.default(userStore));
+      brain.use(rbac(userStore));
       brain.use(brain.builtins.globalMode);
       brain.use(brain.builtins.eventHooks);
       brain.use(brain.builtins.commandRouter);
