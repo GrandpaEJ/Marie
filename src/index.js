@@ -116,17 +116,25 @@ async function start() {
 
       // 6b. Built-in Middlewares
       brain.use(brain.builtins.userFetcher);
+      
+      // 6c. RBAC Middleware
+      import('./middlewares/rbac.js').then(m => {
+        brain.use(m.default(userStore));
+      });
+
       brain.use(brain.builtins.globalMode);
       brain.use(brain.builtins.eventHooks);
       brain.use(brain.builtins.commandRouter);
       brain.use(brain.builtins.fallbackChat);
 
       // --- 7. Start Listening ---
-      api.setOptions(config.fca_options || {
-        listenEvents: true,
-        selfListen: false,
-        logLevel: "silent"
-      });
+      if (api && typeof api.setOptions === 'function') {
+        api.setOptions(config.fca_options || {
+          listenEvents: true,
+          selfListen: false,
+          logLevel: "silent"
+        });
+      }
 
       api.listenMqtt(async (err, event) => {
         if (err) {
