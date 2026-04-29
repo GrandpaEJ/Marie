@@ -3,9 +3,9 @@ declare const _default: {
     name: string;
     description: string;
     schema: z.ZodObject<{
-        timezone: z.ZodOptional<z.ZodString>;
+        timezone: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
-        timezone?: string | undefined;
+        timezone: string;
     }, {
         timezone?: string | undefined;
     }>;
@@ -15,6 +15,7 @@ declare const _default: {
             timezone: {
                 type: string;
                 description: string;
+                default: string;
             };
         };
     };
@@ -22,9 +23,9 @@ declare const _default: {
         timezone?: string;
     }) => Promise<{
         success: boolean;
-        timestamp: string;
-        formatted: string;
+        time: string;
         timezone: string;
+        note: string;
     }>;
 };
 export default _default;

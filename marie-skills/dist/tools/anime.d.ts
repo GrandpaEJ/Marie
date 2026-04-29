@@ -47,17 +47,11 @@ declare const _default: {
         amount?: number;
     }) => Promise<{
         success: boolean;
-        mode: string;
-        category: string;
-        nsfw: boolean | undefined;
         results: any[];
         error?: undefined;
     } | {
         success: boolean;
         error: any;
-        mode?: undefined;
-        category?: undefined;
-        nsfw?: undefined;
         results?: undefined;
     }>;
 };
