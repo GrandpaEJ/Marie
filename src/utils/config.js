@@ -29,7 +29,22 @@ const ConfigSchema = z.object({
   anime: z.object({
     nsfwAllowed: z.boolean().default(false),
     providers: z.array(z.string())
-  })
+  }),
+  platforms: z.object({
+    enabled: z.array(z.string()).default(['facebook']),
+    facebook: z.object({
+      appstate: z.string().default('./appstate.json'),
+      owner: z.string().optional(),
+      admins: z.array(z.string()).optional()
+    }).optional(),
+    telegram: z.object({
+      token: z.string().optional(),
+      apiId: z.number().optional(),
+      apiHash: z.string().optional(),
+      owner: z.string().optional(),
+      admins: z.array(z.string()).optional()
+    }).optional()
+  }).optional()
 });
 
 export function loadConfig() {

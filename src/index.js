@@ -58,6 +58,14 @@ async function start() {
       await eventRegistry.loadEvents(goatPromotedPath, wrapGoatEvent);
     }
 
+    // Load Telegram Commands (if enabled)
+    if (config.platforms?.enabled?.includes('telegram')) {
+      const tgCommandsPath = path.join(process.cwd(), 'telegram/dist/commands');
+      if (fs.existsSync(tgCommandsPath)) {
+        await registry.loadCommands(tgCommandsPath);
+      }
+    }
+
 
     // 2.6 Load Skills
     const skills = new SkillManager();
@@ -73,28 +81,108 @@ async function start() {
     }
 
     // 3. Setup Storage & Owner
-    userStore.ensureOwner(config.owner, "Bot Owner");
+    const enabledPlatforms = config.platforms?.enabled || ['facebook'];
 
-    // 4. Facebook Login
-    let appState;
-    if (fs.existsSync(config.appstate_path)) {
-      appState = JSON.parse(fs.readFileSync(config.appstate_path, 'utf8'));
-    } else {
-      logger.error(`Appstate not found at ${config.appstate_path}.`);
-      process.exit(1);
-    }
+    for (const platformName of enabledPlatforms) {
+      if (platformName === 'facebook') {
+        logger.info("Initializing Facebook platform...");
+        let appState;
+        const appStatePath = config.platforms?.facebook?.appstate || config.appstate_path;
+        if (fs.existsSync(appStatePath)) {
+          appState = JSON.parse(fs.readFileSync(appStatePath, 'utf8'));
+        } else {
+          logger.error(`Facebook appstate not found at ${appStatePath}.`);
+          continue;
+        }
 
-    login({ appState }, async (err, api) => {
-      if (err) {
-        logger.error("Login failed:", err);
-        return;
+        login({ appState }, async (err, api) => {
+          if (err) {
+            logger.error("Facebook login failed:", err);
+            return;
+          }
+          logger.success("Connected to Facebook.");
+          const platform = new FBPlatform(api);
+          await setupBrain(platform, registry, eventRegistry, llm, config, skills);
+          
+          if (api && typeof api.setOptions === 'function') {
+            api.setOptions(config.fca_options || { listenEvents: true, selfListen: false, logLevel: "silent" });
+          }
+          api.listenMqtt(async (err, event) => {
+            if (err) return logger.error("FB Mqtt error:", err);
+            if (!event.threadID) return;
+            const ALLOWED_TYPES = ['message', 'message_reply', 'event', 'log:subscribe', 'log:unsubscribe', 'log:thread-name', 'log:user-nickname', 'log:thread-admins', 'log:thread-image', 'log:thread-color', 'log:thread-call', 'message_reaction'];
+            if (event.type && !ALLOWED_TYPES.includes(event.type) && !event.type.startsWith('log:')) return;
+            
+            const marieEvent = {
+              messageID: event.messageID || '',
+              threadID: event.threadID,
+              senderID: event.senderID || '',
+              body: event.body || "",
+              type: event.type,
+              timestamp: event.timestamp || Date.now(),
+              isGroup: event.isGroup || false,
+              mentions: event.mentions || {},
+              attachments: event.attachments || [],
+              participantIDs: event.participantIDs || [],
+              logMessageType: event.logMessageType || null,
+              logMessageData: event.logMessageData || null,
+              author: event.author || null,
+              messageReply: event.messageReply || null,
+              senderName: event.senderName || null,
+              threadName: event.threadName || null,
+            };
+            eventBus.emit('marie:event', { platform, event: marieEvent });
+          });
+        });
       }
 
-      logger.success("Connected to Facebook.");
+      if (platformName === 'telegram') {
+        logger.info("Initializing Telegram platform...");
+        const tgConfig = config.platforms?.telegram;
+        const botToken = tgConfig?.token || process.env.TELEGRAM_BOT_TOKEN;
 
-      // 5. Initialize Brain with dependencies
-      const platform = new FBPlatform(api);
-      const brain = new Brain(platform, registry, llm, config, {
+        if (!botToken) {
+          logger.error("Telegram token not found in config or .env.");
+          continue;
+        }
+
+        const { createTGPlatform, Dispatcher, filters } = await import('@marie/tg');
+        const platform = await createTGPlatform({
+          apiId: tgConfig.apiId || parseInt(process.env.TELEGRAM_API_ID || '0'),
+          apiHash: tgConfig.apiHash || process.env.TELEGRAM_API_HASH || '',
+          storage: './data/tg-session'
+        });
+
+        const brain = await setupBrain(platform, registry, eventRegistry, llm, config, skills);
+
+        // Telegram specific update handling
+        const dp = Dispatcher.for(platform.client);
+        dp.onNewMessage(async (msg) => {
+          logger.info(`[Telegram] New message from ${msg.sender.id}: ${msg.text}`);
+          const { TGPlatform } = await import('@marie/tg');
+          const marieEvent = TGPlatform.toMarieEvent(msg);
+          await brain.processMessage(marieEvent);
+        });
+
+        await platform.client.start({
+          botToken: tgConfig.token || process.env.TELEGRAM_BOT_TOKEN
+        });
+
+        logger.success("Connected to Telegram.");
+      }
+    }
+
+    async function setupBrain(platform, registry, eventRegistry, llm, config, skills) {
+      // Platform-specific overrides for owner and admins
+      const platformConfig = { ...config };
+      const overrides = config.platforms?.[platform.name];
+      if (overrides?.owner) platformConfig.owner = overrides.owner;
+      if (overrides?.admins) platformConfig.admins = overrides.admins;
+
+      // Ensure platform-specific owner is registered
+      userStore.ensureOwner(platformConfig.owner, `${platform.name.charAt(0).toUpperCase() + platform.name.slice(1)} Owner`);
+
+      const brain = new Brain(platform, registry, llm, platformConfig, {
         userStore,
         threadStore,
         db,
@@ -102,11 +190,7 @@ async function start() {
         eventRegistry
       });
 
-      // --- 6. Assemble Middleware Pipeline ---
-      
-      // 6a. Custom Deduplication Middleware
-      const processedMessages = new LRUCache({ max: 500 }); 
-      
+      const processedMessages = new LRUCache({ max: 500 });
       brain.use(async (ctx, next) => {
         const msgID = ctx.event.messageID;
         if (processedMessages.has(msgID)) return;
@@ -114,68 +198,22 @@ async function start() {
         await next();
       });
 
-      // 6b. Built-in Middlewares
       brain.use(brain.builtins.userFetcher);
-      
-      // 6c. RBAC Middleware
-      import('./middlewares/rbac.js').then(m => {
-        brain.use(m.default(userStore));
-      });
-
+      const rbac = await import('./middlewares/rbac.js');
+      brain.use(rbac.default(userStore));
       brain.use(brain.builtins.globalMode);
       brain.use(brain.builtins.eventHooks);
       brain.use(brain.builtins.commandRouter);
       brain.use(brain.builtins.fallbackChat);
 
-      // --- 7. Start Listening ---
-      if (api && typeof api.setOptions === 'function') {
-        api.setOptions(config.fca_options || {
-          listenEvents: true,
-          selfListen: false,
-          logLevel: "silent"
+      if (platform.name === 'facebook') {
+        eventBus.on('marie:event', async ({ platform: p, event }) => {
+          if (p === platform) await brain.processMessage(event);
         });
       }
 
-      api.listenMqtt(async (err, event) => {
-        if (err) {
-          logger.error("Mqtt error:", err);
-          return;
-        }
-
-        // Allow: messages, replies, and log events (join/leave/etc). Drop presence, typing, etc.
-        const ALLOWED_TYPES = ['message', 'message_reply', 'event', 'log:subscribe', 'log:unsubscribe', 'log:thread-name', 'log:user-nickname', 'log:thread-admins', 'log:thread-image', 'log:thread-color', 'log:thread-call', 'message_reaction'];
-        if (!event.threadID) return; // drop events with no thread (presence, typ, etc.)
-        if (event.type && !ALLOWED_TYPES.includes(event.type) && !event.type.startsWith('log:')) return;
-
-        // Wrap event for Marie
-        const marieEvent = {
-          messageID: event.messageID || '',
-          threadID: event.threadID,
-          senderID: event.senderID || '',
-          body: event.body || "",
-          type: event.type,
-          timestamp: event.timestamp || Date.now(),
-          isGroup: event.isGroup || false,
-          mentions: event.mentions || {},
-          attachments: event.attachments || [],
-          participantIDs: event.participantIDs || [],
-          logMessageType: event.logMessageType || null,
-          logMessageData: event.logMessageData || null,
-          author: event.author || null,
-          messageReply: event.messageReply || null,
-          senderName: event.senderName || null,
-          threadName: event.threadName || null,
-        };
-
-        try {
-          await brain.processMessage(marieEvent);
-        } catch (error) {
-          logger.error("Brain process error:", error);
-        }
-      });
-
-      logger.success(`${config.botName || 'Marie'} is online and listening!`);
-    });
+      return brain;
+    }
 
   } catch (error) {
     logger.error("Startup error:", error);

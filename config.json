@@ -2,9 +2,7 @@
   "botName": "Marie",
   "prefix": ".",
   "owner": "100002672611442",
-  "admins": [
-    "100002672611442"
-  ],
+  "admins": ["100002672611442"],
   "mode": "owner",
   "llm": {
     "provider": "openrouter",
@@ -21,15 +19,21 @@
   "anime": {
     "nsfwAllowed": false,
     "nsfwThreads": [],
-    "providers": [
-      "waifu.pics",
-      "nekos.best",
-      "nekos.life",
-      "nekosapi.com"
-    ]
+    "providers": ["waifu.pics", "nekos.best", "nekos.life", "nekosapi.com"]
   },
   "tokenBudget": {
     "warnAt": 0.8,
     "summaryThreshold": 0.7
+  },
+  "platforms": {
+    "enabled": ["telegram"],
+    "facebook": {
+      "appstate": "./appstate.json"
+    },
+    "telegram": {
+      "secrets": ".env",
+      "admins": ["6122160777"],
+      "owner": "6122160777"
+    }
   }
 }
