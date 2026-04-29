@@ -1,8 +1,8 @@
 import { ICommand } from '../types.js';
 export declare class CommandRegistry {
-    prefix: string;
     commands: Map<string, ICommand>;
-    constructor(prefix?: string);
+    private prefixes;
+    constructor(prefix?: string | string[]);
     register(command: ICommand): void;
     loadCommands(dirPath: string, wrapper?: (mod: any) => ICommand, recursive?: boolean): Promise<void>;
     findCommand(text: string): {

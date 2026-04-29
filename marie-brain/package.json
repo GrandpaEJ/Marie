@@ -15,7 +15,15 @@
   "dependencies": {
     "eventemitter3": "^5.0.1",
     "fast-glob": "^3.3.3",
-    "@napi-rs/canvas": "^0.1.64"
+    "@napi-rs/canvas": "^0.1.64",
+    "better-sqlite3": "^11.8.1",
+    "chalk": "^5.4.1",
+    "dotenv": "^16.4.7",
+    "lru-cache": "^11.3.5",
+    "undici": "^7.3.0",
+    "zod": "^3.24.2",
+    "sharp": "^0.34.5",
+    "systeminformation": "^5.31.5"
   },
 
   "devDependencies": {

@@ -31,3 +31,10 @@ export {
   MarieMiddleware
 };
 
+export * as userStore from './storage/user-store.js';
+export * as threadStore from './storage/thread-store.js';
+export { default as db } from './storage/db.js';
+export { loadConfig } from './utils/config.js';
+export { default as logger } from './utils/logger.js';
+export { default as rbac } from './middlewares/rbac.js';
+export { LLMProvider } from '@marie/llm';

@@ -11,8 +11,9 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "start": "pnpm --filter @marie/app start",
+    "dev": "pnpm --filter @marie/app dev",
+    "build": "pnpm -r build"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

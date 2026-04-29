@@ -1,0 +1,23 @@
+{
+  "name": "@marie/app",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "marie": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@marie/brain": "workspace:*",
+    "@marie/fb": "workspace:*",
+    "@marie/tg": "workspace:*",
+    "@marie/llm": "workspace:*",
+    "@marie/skills": "workspace:*",
+    "@marie/fca": "workspace:*",
+    "chalk": "^5.4.1",
+    "dotenv": "^16.4.7",
+    "lru-cache": "^11.3.5"
+  }
+}

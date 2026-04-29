@@ -1,9 +1,9 @@
 import fg from 'fast-glob';
 export class CommandRegistry {
-    prefix;
     commands = new Map();
+    prefixes;
     constructor(prefix = '.') {
-        this.prefix = prefix;
+        this.prefixes = Array.isArray(prefix) ? prefix : [prefix];
     }
     register(command) {
         this.commands.set(command.name.toLowerCase(), command);
@@ -31,9 +31,18 @@ export class CommandRegistry {
         }
     }
     findCommand(text) {
-        if (!text || !text.startsWith(this.prefix))
+        if (!text)
             return null;
-        const body = text.slice(this.prefix.length).trim();
+        let matchedPrefix = null;
+        for (const p of this.prefixes) {
+            if (text.startsWith(p)) {
+                matchedPrefix = p;
+                break;
+            }
+        }
+        if (!matchedPrefix)
+            return null;
+        const body = text.slice(matchedPrefix.length).trim();
         if (!body)
             return null;
         const args = body.split(/\s+/);
