@@ -46,6 +46,17 @@ export function assembleContext({
   if (userName) systemContent += `\n\nYou are currently talking to ${userName}.`;
   
   // Tool Hint for non-native models
+  const now = new Date();
+  const dhakaTime = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Dhaka',
+    hour: '2-digit',
+    minute: '2-digit',
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  }).format(now);
+
+  systemContent += `\n\n[CONTEXT] Current Local Time (Asia/Dhaka): ${dhakaTime}`;
   systemContent += `\n\n[CRITICAL] You have access to tools. If your interface doesn't support native tool calling, START YOUR MESSAGE with the JSON tool call and nothing else. Example: {"name": "datetime", "arguments": {}}`;
 
   if (countTokens(systemContent) > budget.identity) {
