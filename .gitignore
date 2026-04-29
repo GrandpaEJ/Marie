@@ -9,9 +9,9 @@ temp/
 dist/
 *.tsbuildinfo
 
-# guardian/
-scripts/
 native/
-# bin/
-# !bin/guardian
-# !bin/llm
+# Ignore compiled binaries, only keep the launchers
+bin/x64/
+bin/arm64/
+!bin/guardian
+!bin/llm

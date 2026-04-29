@@ -1,10 +1,44 @@
 #!/bin/sh
-ARCH=$(uname -m)
-if [ "$ARCH" = "x86_64" ]; then
-  exec "$(dirname "$0")/x64/guardian" "$@"
-elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-  exec "$(dirname "$0")/arm64/guardian" "$@"
+
+# GitHub Repo Info
+REPO="GrandpaEJ/Marie"
+BIN_NAME="guardian"
+BASE_DIR=$(dirname "$0")
+
+# Architecture Detection
+ARCH_RAW=$(uname -m)
+if [ "$ARCH_RAW" = "x86_64" ]; then
+  ARCH="x64"
+elif [ "$ARCH_RAW" = "aarch64" ] || [ "$ARCH_RAW" = "arm64" ]; then
+  ARCH="arm64"
 else
-  echo "Unsupported architecture: $ARCH"
+  echo "❌ Unsupported architecture: $ARCH_RAW"
   exit 1
 fi
+
+TARGET_DIR="$BASE_DIR/$ARCH"
+TARGET_BIN="$TARGET_DIR/$BIN_NAME"
+
+# Check if binary exists
+if [ ! -f "$TARGET_BIN" ]; then
+  echo "📥 Binary missing. Downloading $BIN_NAME for $ARCH..."
+  mkdir -p "$TARGET_DIR"
+  
+  # Download from GitHub Releases
+  URL="https://github.com/$REPO/releases/latest/download/${BIN_NAME}-${ARCH}"
+  
+  if command -v curl >/dev/null 2>&1; then
+    curl -L "$URL" -o "$TARGET_BIN"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$TARGET_BIN" "$URL"
+  else
+    echo "❌ Error: curl or wget not found. Please install one to download binaries."
+    exit 1
+  fi
+  
+  chmod +x "$TARGET_BIN"
+  echo "✅ Download complete."
+fi
+
+# Run the binary
+exec "$TARGET_BIN" "$@"
