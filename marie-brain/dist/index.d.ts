@@ -1,0 +1,11 @@
+import { IMarieContext, IMarieEvent, IPlatform, IMarieUser, MarieMiddleware } from './types.js';
+import { Brain } from './core/brain.js';
+import { EventRegistry } from './core/event-registry.js';
+import { CommandRegistry } from './core/command-registry.js';
+import { FBPlatform } from './fb/facebook.js';
+import { wrapMiraiCommand, wrapMiraiEvent } from './fb/mirai.js';
+import { wrapGoatCommand, wrapGoatEvent } from './fb/goat.js';
+import { loadMirai, loadGoat } from './fb/loader.js';
+import { initGlobalMocks as setupFBEnvironment } from './fb/fallback.js';
+import eventBus, { EVENTS } from './core/event-bus.js';
+export { Brain, EventRegistry, CommandRegistry, FBPlatform, wrapMiraiCommand, wrapMiraiEvent, wrapGoatCommand, wrapGoatEvent, loadMirai, loadGoat, setupFBEnvironment, eventBus, EVENTS, IMarieContext, IMarieEvent, IPlatform, IMarieUser, MarieMiddleware };
