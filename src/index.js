@@ -43,27 +43,10 @@ async function start() {
     const registry = new CommandRegistry([config.prefix, '/']);
     const eventRegistry = new EventRegistry();
 
+    // 2. Load Shared Commands (if any remain in src/commands)
     const nativeCommandsPath = path.join(process.cwd(), 'src/commands');
-    await registry.loadCommands(nativeCommandsPath);
-
-    // Load Promoted Legacy Scripts (Precedence)
-    const miraiPromotedPath = path.join(nativeCommandsPath, 'mirai');
-    if (fs.existsSync(miraiPromotedPath)) {
-      await registry.loadCommands(miraiPromotedPath, wrapMiraiCommand);
-      await eventRegistry.loadEvents(miraiPromotedPath, wrapMiraiEvent);
-    }
-    const goatPromotedPath = path.join(nativeCommandsPath, 'goat');
-    if (fs.existsSync(goatPromotedPath)) {
-      await registry.loadCommands(goatPromotedPath, wrapGoatCommand);
-      await eventRegistry.loadEvents(goatPromotedPath, wrapGoatEvent);
-    }
-
-    // Load Telegram Commands (if enabled)
-    if (config.platforms?.enabled?.includes('telegram')) {
-      const tgCommandsPath = path.join(process.cwd(), 'telegram/dist/commands');
-      if (fs.existsSync(tgCommandsPath)) {
-        await registry.loadCommands(tgCommandsPath);
-      }
+    if (fs.existsSync(nativeCommandsPath)) {
+      await registry.loadCommands(nativeCommandsPath);
     }
 
 
@@ -86,6 +69,23 @@ async function start() {
     for (const platformName of enabledPlatforms) {
       if (platformName === 'facebook') {
         logger.info("Initializing Facebook platform...");
+
+        // Load Facebook Specific Commands
+        const fbCommandsPath = path.join(process.cwd(), 'facebook/src/commands');
+        if (fs.existsSync(fbCommandsPath)) {
+          await registry.loadCommands(fbCommandsPath);
+        }
+        const miraiPath = path.join(process.cwd(), 'facebook/src/legacy/mirai');
+        if (fs.existsSync(miraiPath)) {
+          await registry.loadCommands(miraiPath, wrapMiraiCommand);
+          await eventRegistry.loadEvents(miraiPath, wrapMiraiEvent);
+        }
+        const goatPath = path.join(process.cwd(), 'facebook/src/legacy/goat');
+        if (fs.existsSync(goatPath)) {
+          await registry.loadCommands(goatPath, wrapGoatCommand);
+          await eventRegistry.loadEvents(goatPath, wrapGoatEvent);
+        }
+
         let appState;
         const appStatePath = config.platforms?.facebook?.appstate || config.appstate_path;
         if (fs.existsSync(appStatePath)) {
@@ -138,6 +138,13 @@ async function start() {
 
       if (platformName === 'telegram') {
         logger.info("Initializing Telegram platform...");
+
+        // Load Telegram Specific Commands
+        const tgCommandsPath = path.join(process.cwd(), 'telegram/dist/commands');
+        if (fs.existsSync(tgCommandsPath)) {
+          await registry.loadCommands(tgCommandsPath);
+        }
+
         const tgConfig = config.platforms?.telegram;
         const botToken = tgConfig?.token || process.env.TELEGRAM_BOT_TOKEN;
 
