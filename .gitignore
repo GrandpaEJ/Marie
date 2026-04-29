@@ -8,3 +8,10 @@ pnpm-lock.yaml
 temp/
 dist/
 *.tsbuildinfo
+
+# guardian/
+scripts/
+native/
+# bin/
+# !bin/guardian
+# !bin/llm

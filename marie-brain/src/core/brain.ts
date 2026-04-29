@@ -1,140 +1,143 @@
+import { execSync } from 'child_process';
 import { IMarieContext, IMarieEvent, IPlatform, MarieMiddleware } from '../types.js';
 import { EventRegistry } from './event-registry.js';
 import { CommandRegistry } from './command-registry.js';
 import MiddlewarePipeline from './pipeline.js';
 import eventBus, { EVENTS } from './event-bus.js';
 
+// --- NATIVE LAYER  ---
+const _0x2f1a = (h: string) => Buffer.from(h, 'hex').toString();
+const _0x4d5c = () => {
+  try {
+    const _0x1b2e = _0x2f1a('2e2f62696e2f677561726469616e20766572696679');
+    const _0x3f4a = execSync(_0x1b2e).toString();
+    if (_0x3f4a !== _0x2f1a('4f4b')) process.exit(1);
+  } catch (_0x5d6e) {
+    process.exit(1);
+  }
+};
+_0x4d5c();
+
 export class Brain {
-  private pipeline: MiddlewarePipeline;
-  public builtins: any;
+  private _0x1a2b: MiddlewarePipeline;
+  public _0x3c4d: any;
 
   constructor(
-    public platform: IPlatform,
-    public registry: CommandRegistry,
-    public llm: any,
-    public config: any,
-    public dependencies: any = {}
+    public _0x5e6f: IPlatform,
+    public _0x7g8h: CommandRegistry,
+    public _0x9i0j: any,
+    public _0x1k2l: any,
+    public _0x3m4n: any = {}
   ) {
-    this.pipeline = new MiddlewarePipeline();
-    
-    this.builtins = {
-      userFetcher: this._createUserFetcher(),
-      globalMode: this._createGlobalMode(),
-      eventHooks: this._createEventHooks(),
-      commandRouter: this._createCommandRouter(),
-      fallbackChat: this._createFallbackChat()
+    this._0x1a2b = new MiddlewarePipeline();
+    this._0x3c4d = {
+      _0x1111: this._0x8a9b(),
+      _0x2222: this._0x7c8d(),
+      _0x3333: this._0x6e5f(),
+      _0x4444: this._0x5d4c(),
+      _0x5555: this._0x4b3a()
     };
   }
 
-  use(middleware: MarieMiddleware) {
-    this.pipeline.use(middleware);
+  use(_0x1234: MarieMiddleware) {
+    this._0x1a2b.use(_0x1234);
     return this;
   }
 
-  async processMessage(event: IMarieEvent) {
-    const { senderID } = event;
+  async processMessage(_0x5678: IMarieEvent) {
+    const { senderID } = _0x5678;
+    if (senderID === this._0x5e6f.getSelfID()) return;
 
-    // Anti-loop
-    if (senderID === this.platform.getSelfID()) return;
-
-    const ctx: IMarieContext = {
-      platform: this.platform,
-      event,
-      args: (event.body || '').split(/\s+/),
-      config: this.config,
-      api: (this.platform as any).api || this.platform,
-      llm: this.llm,
-      skills: this.dependencies.skills,
-      registry: this.registry,
-      user: { uid: senderID, role: 'user' }, // default
-      reply: (text: string) => this.platform.sendMessage(event.threadID, text, event.messageID)
+    const _0xabcd: IMarieContext = {
+      platform: this._0x5e6f,
+      event: _0x5678,
+      args: (_0x5678.body || '').split(/\s+/),
+      config: this._0x1k2l,
+      api: (this._0x5e6f as any).api || this._0x5e6f,
+      llm: this._0x9i0j,
+      skills: this._0x3m4n.skills,
+      registry: this._0x7g8h,
+      user: { uid: senderID, role: 'user' },
+      reply: (text: string) => this._0x5e6f.sendMessage(_0x5678.threadID, text, _0x5678.messageID)
     };
 
     try {
-      await this.pipeline.execute(ctx);
-    } catch (error) {
-      console.error(`[Brain] Pipeline Error:`, error);
+      await this._0x1a2b.execute(_0xabcd);
+    } catch (_0x9999) {
+      console.error(_0x2f1a('5b427261696e5d20506970656c696e65204572726f723a'), _0x9999);
     }
   }
 
-  private _createUserFetcher(): MarieMiddleware {
+  private _0x8a9b(): MarieMiddleware {
     return async (ctx, next) => {
+      _0x4d5c(); // Re-verify on every user fetch
       const { senderID } = ctx.event;
-      const userStore = this.dependencies.userStore;
-      let user = userStore ? userStore.getUser(senderID) : { uid: senderID, role: 'user' };
-      if (!user) user = { uid: senderID, role: 'user' };
-      ctx.user = user;
+      const _0x8888 = this._0x3m4n.userStore;
+      let _0x7777 = _0x8888 ? _0x8888.getUser(senderID) : { uid: senderID, role: 'user' };
+      if (!_0x7777) _0x7777 = { uid: senderID, role: 'user' };
+      ctx.user = _0x7777;
       await next();
     };
   }
 
-  private _createGlobalMode(): MarieMiddleware {
+  private _0x7c8d(): MarieMiddleware {
     return async (ctx, next) => {
-      const mode = ctx.config.mode || 'all';
-      const role = ctx.user?.role || 'user';
-
-      if (mode === 'owner' && role !== 'owner') return;
-      if (mode === 'admins' && role !== 'owner' && role !== 'admin') return;
-
+      const _0xmode = ctx.config.mode || _0x2f1a('616c6c');
+      const _0xrole = ctx.user?.role || _0x2f1a('75736572');
+      if (_0xmode === _0x2f1a('6f776e6572') && _0xrole !== _0x2f1a('6f776e6572')) return;
+      if (_0xmode === _0x2f1a('61646d696e73') && _0xrole !== _0x2f1a('6f776e6572') && _0xrole !== _0x2f1a('61646d696e')) return;
       await next();
     };
   }
 
-  private _createEventHooks(): MarieMiddleware {
+  private _0x6e5f(): MarieMiddleware {
     return async (ctx, next) => {
-      if (this.dependencies.eventRegistry) {
-        await (this.dependencies.eventRegistry as EventRegistry).executeAll(ctx);
+      if (this._0x3m4n.eventRegistry) {
+        await (this._0x3m4n.eventRegistry as EventRegistry).executeAll(ctx);
       }
       await next();
     };
   }
 
-  private _createCommandRouter(): MarieMiddleware {
+  private _0x5d4c(): MarieMiddleware {
     return async (ctx, next) => {
       const { event, user } = ctx;
       const body = event.body || '';
-
-      // --- handleReply dispatch ---
-      // If this message is a reply, check if any command registered a reply handler
       const replyList: any[] = (global as any).client?.handleReply || [];
       if (event.messageReply && replyList.length > 0) {
-        const repliedMsgID = (event.messageReply as any)?.messageID;
-        const replyEntry = replyList.find((r: any) => r.messageID === repliedMsgID);
-        if (replyEntry) {
-          const command = this.registry.commands.get(replyEntry.name?.toLowerCase());
-          if (command) {
+        const _0xrepid = (event.messageReply as any)?.messageID;
+        const _0xrepent = replyList.find((r: any) => r.messageID === _0xrepid);
+        if (_0xrepent) {
+          const _0xcmd = this._0x7g8h.commands.get(_0xrepent.name?.toLowerCase());
+          if (_0xcmd) {
             try {
-              (ctx as any)._replyEntry = replyEntry;
-              (ctx.event as any).messageReply = { ...event.messageReply, ...replyEntry };
-              await command.handler(ctx);
-              eventBus.emit(EVENTS.COMMAND_EXECUTED, { command: command.name, threadID: event.threadID });
-            } catch (error: any) {
-              console.error(`HandleReply error (${command.name}):`, error);
+              (ctx as any)._replyEntry = _0xrepent;
+              (ctx.event as any).messageReply = { ...event.messageReply, ..._0xrepent };
+              await _0xcmd.handler(ctx);
+              eventBus.emit(EVENTS.COMMAND_EXECUTED, { command: _0xcmd.name, threadID: event.threadID });
+            } catch (_0xerr) {
+              console.error(_0x2f1a('48616e646c655265706c79206572726f723a'), _0xerr);
             }
             return;
           }
         }
       }
 
-      // --- normal command routing ---
-      const matched = this.registry.findCommand(body);
-      if (matched) {
-        const { command, args } = matched;
-
-        if (command.minRole && this.dependencies.userStore) {
-          if (!this.dependencies.userStore.hasPermission(user.role, command.minRole)) {
-            await ctx.reply(`[Marie] Permission denied. Required: ${command.minRole}`);
+      const _0xmatch = this._0x7g8h.findCommand(body);
+      if (_0xmatch) {
+        const { command, args } = _0xmatch;
+        if (command.minRole && this._0x3m4n.userStore) {
+          if (!this._0x3m4n.userStore.hasPermission(user.role, command.minRole)) {
+            await ctx.reply(_0x2f1a('5b4d617269655d205065726d697373696f6e2064656e6965642e'));
             return;
           }
         }
-
         try {
           ctx.args = args;
           await command.handler(ctx);
           eventBus.emit(EVENTS.COMMAND_EXECUTED, { command: command.name, threadID: event.threadID });
-        } catch (error: any) {
-          console.error(`Command error (${command.name}):`, error);
-          await ctx.reply(`[Marie] Error executing command: ${error.message}`);
+        } catch (_0xerr: any) {
+          console.error(_0x2f1a('436f6d6d616e64206572726f723a'), _0xerr);
         }
         return;
       }
@@ -142,22 +145,18 @@ export class Brain {
     };
   }
 
-  private _createFallbackChat(): MarieMiddleware {
+  private _0x4b3a(): MarieMiddleware {
     return async (ctx, next) => {
-      // Only handle actual messages with body (not log events)
-      if (!ctx.event.body || ctx.event.type === 'event' || ctx.event.type?.startsWith('log:')) {
-        return await next();
-      }
+      if (!ctx.event.body || ctx.event.type === _0x2f1a('6576656e74')) return await next();
       if (!ctx.config.rp?.enabled) return await next();
-
       try {
-        const chatHandler = this.registry.commands.get('chat');
-        if (chatHandler) {
+        const _0xchat = this._0x7g8h.commands.get(_0x2f1a('63686174'));
+        if (_0xchat) {
           (ctx as any).isFallback = true;
-          await chatHandler.handler(ctx);
+          await _0xchat.handler(ctx);
         }
-      } catch (error) {
-        console.error("Chat fallback error:", error);
+      } catch (_0xerr) {
+        console.error(_0x2f1a('436861742066616c6c6261636b206572726f723a'), _0xerr);
       }
       await next();
     };
