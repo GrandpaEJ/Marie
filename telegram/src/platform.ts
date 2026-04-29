@@ -27,21 +27,27 @@ export class TGPlatform implements IPlatform {
     let attachments: any[] = [];
 
     if (typeof arg1 === 'string') {
-      // Smart detection: If arg1 looks like text and arg2 looks like an ID, swap them
-      // IDs are usually numeric or short alphanumeric without spaces
-      const isArg1ID = /^-?\d+$/.test(arg1) || (arg1.length < 20 && !arg1.includes(' '));
-      const isArg2ID = arg2 && (/^-?\d+$/.test(arg2) || (arg2.length < 20 && !arg2.includes(' ')));
+      // IDs in Telegram are usually numeric (123456) or usernames without spaces
+      // Message text usually has spaces, newlines, or is quite long
+      const looksLikeID = (str: string) => /^-?\d+$/.test(str) || (str.length < 25 && !str.includes(' ') && !str.includes('\n'));
+      
+      const isArg1ID = looksLikeID(arg1);
+      const isArg2ID = arg2 && looksLikeID(arg2);
 
       if (!isArg1ID && isArg2ID) {
         // (text, threadID) style
         threadID = arg2;
         text = arg1;
         replyTo = arg3;
-      } else {
+      } else if (isArg1ID) {
         // (threadID, text) style
         threadID = arg1;
         text = arg2;
         replyTo = arg3;
+      } else {
+        // Fallback: If we can't find a valid ID, don't try to use the text as an ID
+        console.error(`[Marie-TG] Critical: Could not resolve a valid threadID. arg1: ${arg1.substring(0, 20)}...`);
+        return; 
       }
     } else {
       // payload-style (Facebook compatibility)
