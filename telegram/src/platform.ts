@@ -1,0 +1,119 @@
+import { IPlatform, IMarieUser, IMarieEvent } from '@marie/brain';
+import { TelegramClient, Message } from '@mtcute/node';
+
+export class TGPlatform implements IPlatform {
+  name = 'telegram';
+
+  constructor(public client: TelegramClient) {}
+
+  private resolvePeer(id: string): any {
+    // If it looks like a number, convert it. If it starts with a letter, keep as string (username).
+    if (/^-?\d+$/.test(id)) {
+      return parseInt(id);
+    }
+    return id;
+  }
+
+  getSelfID(): string {
+    const self = (this.client.storage as any).self?.get?.();
+    return self?.userId?.toString() || '';
+  }
+
+  async sendMessage(arg1: string | any, arg2: string, arg3?: string): Promise<any> {
+    // Handle both (threadID, text, replyTo) and (payload, threadID, replyTo)
+    let threadID: string;
+    let text: string;
+    let replyTo: string | undefined;
+    let attachments: any[] = [];
+
+    if (typeof arg1 === 'string') {
+      threadID = arg1;
+      text = arg2;
+      replyTo = arg3;
+    } else {
+      // payload-style (Facebook compatibility)
+      const payload = arg1;
+      threadID = arg2;
+      replyTo = arg3;
+      text = typeof payload === 'string' ? payload : payload.body || '';
+      attachments = payload.attachment || [];
+    }
+
+    const peer = this.resolvePeer(threadID);
+
+    if (attachments.length > 0) {
+      // Send first attachment as primary, others as additional media if supported
+      // For now, just send the text with the first attachment
+      return this.sendMedia(threadID, attachments[0], 'image', text);
+    }
+
+    return this.client.sendText(peer, text, {
+      replyTo: replyTo ? parseInt(replyTo) : undefined
+    });
+  }
+
+  async sendMedia(threadID: string, pathOrStream: any, type: 'image' | 'video' | 'audio' | 'file', text?: string): Promise<any> {
+    let mtcuteType: any = 'document';
+    if (type === 'image') mtcuteType = 'photo';
+    else if (type === 'video') mtcuteType = 'video';
+    else if (type === 'audio') mtcuteType = 'audio';
+
+    return this.client.sendMedia(this.resolvePeer(threadID), {
+      type: mtcuteType,
+      file: pathOrStream,
+      caption: text
+    });
+  }
+
+  async getUserInfo(uid: string): Promise<IMarieUser> {
+    const users = await this.client.getUsers(this.resolvePeer(uid));
+    const u = users[0];
+    if (!u) throw new Error(`User not found: ${uid}`);
+    
+    return {
+      uid: u.id.toString(),
+      role: 'user',
+      name: u.displayName
+    };
+  }
+
+  async getThreadInfo(threadID: string): Promise<any> {
+    return this.client.getChat(this.resolvePeer(threadID));
+  }
+
+  async setTyping(threadID: string, isTyping: boolean): Promise<void> {
+    if (isTyping) {
+      await this.client.sendTyping(this.resolvePeer(threadID));
+    }
+  }
+
+  // Facebook compatibility alias
+  async sendTypingIndicator(isTyping: boolean | string, threadID?: string): Promise<void> {
+    const tid = typeof isTyping === 'string' ? isTyping : threadID;
+    const typing = typeof isTyping === 'boolean' ? isTyping : true;
+    if (tid) await this.setTyping(tid, typing);
+  }
+
+  async unsendMessage(messageID: string): Promise<void> {
+    await this.client.deleteMessages([parseInt(messageID) as any]);
+  }
+
+  static toMarieEvent(msg: Message): IMarieEvent {
+    const chat = msg.chat;
+    const sender = msg.sender;
+    
+    return {
+      messageID: msg.id.toString(),
+      threadID: chat.id.toString(),
+      senderID: sender.id.toString(),
+      body: msg.text || '',
+      type: 'message',
+      timestamp: msg.date.getTime(),
+      isGroup: chat.type !== 'user',
+      mentions: {},
+      attachments: msg.media ? [msg.media] : [],
+      senderName: sender.displayName,
+      threadName: (chat as any).displayName || (chat as any).title || sender.displayName
+    };
+  }
+}

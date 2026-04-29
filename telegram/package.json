@@ -1,0 +1,21 @@
+{
+  "name": "@marie/tg",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Telegram integration for Marie using mtcute",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@marie/brain": "workspace:*",
+    "@mtcute/node": "^0.29.6",
+    "@mtcute/dispatcher": "^0.29.6",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
