@@ -67,5 +67,14 @@ export class LLMProvider {
     }
   }
 
+  async countTokens(text: string): Promise<number> {
+    try {
+      const stdout = execFileSync(this.binPath, ['tokenize', text || ''], { encoding: 'utf8' });
+      return parseInt(stdout.trim(), 10) || 0;
+    } catch (error) {
+      return Math.ceil((text || '').length / 4);
+    }
+  }
+
   async destroy(): Promise<void> {}
 }
