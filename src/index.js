@@ -40,7 +40,7 @@ async function start() {
     logger.success("LLM Provider initialized.");
 
     // 2. Load Commands
-    const registry = new CommandRegistry(config.prefix);
+    const registry = new CommandRegistry([config.prefix, '/']);
     const eventRegistry = new EventRegistry();
 
     const nativeCommandsPath = path.join(process.cwd(), 'src/commands');

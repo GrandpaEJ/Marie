@@ -4,7 +4,11 @@ import fg from 'fast-glob';
 export class CommandRegistry {
   public commands: Map<string, ICommand> = new Map();
 
-  constructor(public prefix: string = '.') {}
+  private prefixes: string[];
+
+  constructor(prefix: string | string[] = '.') {
+    this.prefixes = Array.isArray(prefix) ? prefix : [prefix];
+  }
 
   register(command: ICommand) {
     this.commands.set(command.name.toLowerCase(), command);
@@ -34,8 +38,19 @@ export class CommandRegistry {
   }
 
   findCommand(text: string) {
-    if (!text || !text.startsWith(this.prefix)) return null;
-    const body = text.slice(this.prefix.length).trim();
+    if (!text) return null;
+    
+    let matchedPrefix = null;
+    for (const p of this.prefixes) {
+      if (text.startsWith(p)) {
+        matchedPrefix = p;
+        break;
+      }
+    }
+
+    if (!matchedPrefix) return null;
+
+    const body = text.slice(matchedPrefix.length).trim();
     if (!body) return null;
 
     const args = body.split(/\s+/);
