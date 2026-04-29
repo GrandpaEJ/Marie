@@ -4,7 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_DIR = path.join(__dirname, '../../data');
+const DB_DIR = path.join(__dirname, '../../../data');
 const DB_PATH = path.join(DB_DIR, 'marie.db');
 
 // Ensure data directory exists

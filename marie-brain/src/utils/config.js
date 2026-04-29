@@ -4,10 +4,10 @@ import { fileURLToPath } from 'url';
 import { z } from 'zod';
 import dotenv from 'dotenv';
 
-dotenv.config();
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = path.join(__dirname, '../../config.json');
+dotenv.config({ path: path.join(__dirname, '../../../.env') });
+
+const CONFIG_PATH = path.join(__dirname, '../../../config.json');
 
 const ConfigSchema = z.object({
   botName: z.string().default('Marie'),
@@ -49,7 +49,7 @@ const ConfigSchema = z.object({
 
 export function loadConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
-    throw new Error('config.json not found');
+    throw new Error(`config.json not found at ${CONFIG_PATH}`);
   }
 
   const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));

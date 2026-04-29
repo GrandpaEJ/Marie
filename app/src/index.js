@@ -4,13 +4,13 @@ import fs from 'fs';
 import path from 'path';
 import login from '@marie/fca';
 import { LRUCache } from 'lru-cache';
-import { 
-  Brain, 
-  CommandRegistry, 
-  EventRegistry, 
+import {
+  Brain,
+  CommandRegistry,
+  EventRegistry,
   FBPlatform,
-  eventBus, 
-  EVENTS, 
+  eventBus,
+  EVENTS,
   setupFBEnvironment,
   loadMirai,
   loadGoat,
@@ -27,12 +27,16 @@ import {
   rbac
 } from '@marie/brain';
 import { SkillManager } from '@marie/skills';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT_DIR = path.join(__dirname, '../../');
 
 async function start() {
   try {
     logger.info("Starting Marie v1...");
     const config = loadConfig();
-    
+
     // 0. Setup Facebook Compatibility Environment
     setupFBEnvironment({ prefix: config.prefix, admins: config.admins, owner: config.owner });
 
@@ -45,10 +49,15 @@ async function start() {
     const eventRegistry = new EventRegistry();
 
 
+    // 2. Load Shared Commands from Brain
+    const sharedCommandsPath = path.join(ROOT_DIR, 'marie-brain/dist/commands');
+    if (fs.existsSync(sharedCommandsPath)) {
+      await registry.loadCommands(sharedCommandsPath);
+    }
 
     // 2.6 Load Skills
     const skills = new SkillManager();
-    const toolsPath = path.join(process.cwd(), 'marie-skills/dist/tools');
+    const toolsPath = path.join(ROOT_DIR, 'marie-skills/dist/tools');
     await skills.loadTools(toolsPath);
 
     // 2.7 Sync global.client.commands for legacy script compatibility
@@ -66,17 +75,12 @@ async function start() {
       if (platformName === 'facebook') {
         logger.info("Initializing Facebook platform...");
 
-        // Load Facebook Specific Commands
-        const fbCommandsPath = path.join(process.cwd(), 'facebook/src/commands');
-        if (fs.existsSync(fbCommandsPath)) {
-          await registry.loadCommands(fbCommandsPath);
-        }
-        const miraiPath = path.join(process.cwd(), 'facebook/src/legacy/mirai');
+        const miraiPath = path.join(ROOT_DIR, 'facebook/src/legacy/mirai');
         if (fs.existsSync(miraiPath)) {
           await registry.loadCommands(miraiPath, wrapMiraiCommand);
           await eventRegistry.loadEvents(miraiPath, wrapMiraiEvent);
         }
-        const goatPath = path.join(process.cwd(), 'facebook/src/legacy/goat');
+        const goatPath = path.join(ROOT_DIR, 'facebook/src/legacy/goat');
         if (fs.existsSync(goatPath)) {
           await registry.loadCommands(goatPath, wrapGoatCommand);
           await eventRegistry.loadEvents(goatPath, wrapGoatEvent);
@@ -84,10 +88,12 @@ async function start() {
 
         let appState;
         const appStatePath = config.platforms?.facebook?.appstate || config.appstate_path;
-        if (fs.existsSync(appStatePath)) {
-          appState = JSON.parse(fs.readFileSync(appStatePath, 'utf8'));
+        const absoluteAppStatePath = path.isAbsolute(appStatePath) ? appStatePath : path.join(ROOT_DIR, appStatePath);
+
+        if (fs.existsSync(absoluteAppStatePath)) {
+          appState = JSON.parse(fs.readFileSync(absoluteAppStatePath, 'utf8'));
         } else {
-          logger.error(`Facebook appstate not found at ${appStatePath}.`);
+          logger.error(`Facebook appstate not found at ${absoluteAppStatePath}.`);
           continue;
         }
 
@@ -99,7 +105,7 @@ async function start() {
           logger.success("Connected to Facebook.");
           const platform = new FBPlatform(api);
           await setupBrain(platform, registry, eventRegistry, llm, config, skills);
-          
+
           if (api && typeof api.setOptions === 'function') {
             api.setOptions(config.fca_options || { listenEvents: true, selfListen: false, logLevel: "silent" });
           }
@@ -108,7 +114,7 @@ async function start() {
             if (!event.threadID) return;
             const ALLOWED_TYPES = ['message', 'message_reply', 'event', 'log:subscribe', 'log:unsubscribe', 'log:thread-name', 'log:user-nickname', 'log:thread-admins', 'log:thread-image', 'log:thread-color', 'log:thread-call', 'message_reaction'];
             if (event.type && !ALLOWED_TYPES.includes(event.type) && !event.type.startsWith('log:')) return;
-            
+
             const marieEvent = {
               messageID: event.messageID || '',
               threadID: event.threadID,
@@ -136,7 +142,7 @@ async function start() {
         logger.info("Initializing Telegram platform...");
 
         // Load Telegram Specific Commands
-        const tgCommandsPath = path.join(process.cwd(), 'telegram/dist/commands');
+        const tgCommandsPath = path.join(ROOT_DIR, 'telegram/dist/commands');
         if (fs.existsSync(tgCommandsPath)) {
           await registry.loadCommands(tgCommandsPath);
         }
@@ -150,10 +156,16 @@ async function start() {
         }
 
         const { createTGPlatform, Dispatcher, filters } = await import('@marie/tg');
+
+        // Ensure session directory exists
+        const sessionPath = path.join(ROOT_DIR, './data/tg-session');
+        const sessionDir = path.dirname(sessionPath);
+        if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
+
         const platform = await createTGPlatform({
           apiId: tgConfig.apiId || parseInt(process.env.TELEGRAM_API_ID || '0'),
           apiHash: tgConfig.apiHash || process.env.TELEGRAM_API_HASH || '',
-          storage: './data/tg-session'
+          storage: sessionPath
         });
 
         const brain = await setupBrain(platform, registry, eventRegistry, llm, config, skills);

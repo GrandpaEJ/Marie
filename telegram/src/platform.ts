@@ -88,10 +88,20 @@ export class TGPlatform implements IPlatform {
   }
 
   // Facebook compatibility alias
-  async sendTypingIndicator(isTyping: boolean | string, threadID?: string): Promise<void> {
-    const tid = typeof isTyping === 'string' ? isTyping : threadID;
-    const typing = typeof isTyping === 'boolean' ? isTyping : true;
-    if (tid) await this.setTyping(tid, typing);
+  async sendTypingIndicator(arg1: boolean | string, arg2?: string): Promise<void> {
+    let isTyping: boolean;
+    let threadID: string | undefined;
+
+    if (typeof arg1 === 'boolean') {
+      isTyping = arg1;
+      threadID = arg2;
+    } else {
+      // Legacy style: sendTypingIndicator(threadID)
+      isTyping = true;
+      threadID = arg1;
+    }
+
+    if (threadID) await this.setTyping(threadID, isTyping);
   }
 
   async unsendMessage(messageID: string): Promise<void> {
