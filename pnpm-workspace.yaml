@@ -5,3 +5,4 @@ packages:
   - 'marie-llm'
   - 'marie-brain'
   - 'marie-skills'
+  - 'telegram'

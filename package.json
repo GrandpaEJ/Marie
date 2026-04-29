@@ -27,6 +27,7 @@
     "@marie/llm": "workspace:*",
     "@marie/memory": "workspace:*",
     "@marie/skills": "workspace:*",
+    "@marie/tg": "workspace:*",
     "axios": "^1.15.2",
     "better-sqlite3": "^11.8.1",
     "canvas": "npm:@napi-rs/canvas@^0.1.99",
