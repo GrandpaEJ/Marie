@@ -20,50 +20,50 @@ const _0x4d5c = () => {
 _0x4d5c();
 
 export class Brain {
-  private _0x1a2b: MiddlewarePipeline;
-  public _0x3c4d: any;
+  private pipeline: MiddlewarePipeline;
+  public builtins: any;
 
   constructor(
-    public _0x5e6f: IPlatform,
-    public _0x7g8h: CommandRegistry,
-    public _0x9i0j: any,
-    public _0x1k2l: any,
-    public _0x3m4n: any = {}
+    public platform: IPlatform,
+    public registry: CommandRegistry,
+    public llm: any,
+    public config: any,
+    public dependencies: any = {}
   ) {
-    this._0x1a2b = new MiddlewarePipeline();
-    this._0x3c4d = {
-      _0x1111: this._0x8a9b(),
-      _0x2222: this._0x7c8d(),
-      _0x3333: this._0x6e5f(),
-      _0x4444: this._0x5d4c(),
-      _0x5555: this._0x4b3a()
+    this.pipeline = new MiddlewarePipeline();
+    this.builtins = {
+      userFetcher: this._0x8a9b(),
+      globalMode: this._0x7c8d(),
+      eventHooks: this._0x6e5f(),
+      commandRouter: this._0x5d4c(),
+      fallbackChat: this._0x4b3a()
     };
   }
 
   use(_0x1234: MarieMiddleware) {
-    this._0x1a2b.use(_0x1234);
+    this.pipeline.use(_0x1234);
     return this;
   }
 
   async processMessage(_0x5678: IMarieEvent) {
     const { senderID } = _0x5678;
-    if (senderID === this._0x5e6f.getSelfID()) return;
+    if (senderID === this.platform.getSelfID()) return;
 
     const _0xabcd: IMarieContext = {
-      platform: this._0x5e6f,
+      platform: this.platform,
       event: _0x5678,
       args: (_0x5678.body || '').split(/\s+/),
-      config: this._0x1k2l,
-      api: (this._0x5e6f as any).api || this._0x5e6f,
-      llm: this._0x9i0j,
-      skills: this._0x3m4n.skills,
-      registry: this._0x7g8h,
+      config: this.config,
+      api: (this.platform as any).api || this.platform,
+      llm: this.llm,
+      skills: this.dependencies.skills,
+      registry: this.registry,
       user: { uid: senderID, role: 'user' },
-      reply: (text: string) => this._0x5e6f.sendMessage(_0x5678.threadID, text, _0x5678.messageID)
+      reply: (text: string) => this.platform.sendMessage(_0x5678.threadID, text, _0x5678.messageID)
     };
 
     try {
-      await this._0x1a2b.execute(_0xabcd);
+      await this.pipeline.execute(_0xabcd);
     } catch (_0x9999) {
       console.error(_0x2f1a('5b427261696e5d20506970656c696e65204572726f723a'), _0x9999);
     }
@@ -71,9 +71,9 @@ export class Brain {
 
   private _0x8a9b(): MarieMiddleware {
     return async (ctx, next) => {
-      _0x4d5c(); // Re-verify on every user fetch
+      _0x4d5c();
       const { senderID } = ctx.event;
-      const _0x8888 = this._0x3m4n.userStore;
+      const _0x8888 = this.dependencies.userStore;
       let _0x7777 = _0x8888 ? _0x8888.getUser(senderID) : { uid: senderID, role: 'user' };
       if (!_0x7777) _0x7777 = { uid: senderID, role: 'user' };
       ctx.user = _0x7777;
@@ -93,8 +93,8 @@ export class Brain {
 
   private _0x6e5f(): MarieMiddleware {
     return async (ctx, next) => {
-      if (this._0x3m4n.eventRegistry) {
-        await (this._0x3m4n.eventRegistry as EventRegistry).executeAll(ctx);
+      if (this.dependencies.eventRegistry) {
+        await (this.dependencies.eventRegistry as EventRegistry).executeAll(ctx);
       }
       await next();
     };
@@ -109,7 +109,7 @@ export class Brain {
         const _0xrepid = (event.messageReply as any)?.messageID;
         const _0xrepent = replyList.find((r: any) => r.messageID === _0xrepid);
         if (_0xrepent) {
-          const _0xcmd = this._0x7g8h.commands.get(_0xrepent.name?.toLowerCase());
+          const _0xcmd = this.registry.commands.get(_0xrepent.name?.toLowerCase());
           if (_0xcmd) {
             try {
               (ctx as any)._replyEntry = _0xrepent;
@@ -124,11 +124,11 @@ export class Brain {
         }
       }
 
-      const _0xmatch = this._0x7g8h.findCommand(body);
+      const _0xmatch = this.registry.findCommand(body);
       if (_0xmatch) {
         const { command, args } = _0xmatch;
-        if (command.minRole && this._0x3m4n.userStore) {
-          if (!this._0x3m4n.userStore.hasPermission(user.role, command.minRole)) {
+        if (command.minRole && this.dependencies.userStore) {
+          if (!this.dependencies.userStore.hasPermission(user.role, command.minRole)) {
             await ctx.reply(_0x2f1a('5b4d617269655d205065726d697373696f6e2064656e6965642e'));
             return;
           }
@@ -151,7 +151,7 @@ export class Brain {
       if (!ctx.event.body || ctx.event.type === _0x2f1a('6576656e74')) return await next();
       if (!ctx.config.rp?.enabled) return await next();
       try {
-        const _0xchat = this._0x7g8h.commands.get(_0x2f1a('63686174'));
+        const _0xchat = this.registry.commands.get(_0x2f1a('63686174'));
         if (_0xchat) {
           (ctx as any).isFallback = true;
           await _0xchat.handler(ctx);
