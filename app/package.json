@@ -12,12 +12,10 @@
   "dependencies": {
     "@marie/brain": "workspace:*",
     "@marie/fb": "workspace:*",
-    "@marie/tg": "workspace:*",
-    "@marie/llm": "workspace:*",
-    "@marie/skills": "workspace:*",
     "@marie/fca": "workspace:*",
+    "@marie/skills": "workspace:*",
+    "@marie/tg": "workspace:*",
     "chalk": "^5.4.1",
-    "dotenv": "^16.4.7",
-    "lru-cache": "^11.3.5"
+    "dotenv": "^16.4.7"
   }
 }

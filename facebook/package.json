@@ -6,7 +6,6 @@
   "dependencies": {
     "@marie/brain": "workspace:*",
     "@marie/fca": "workspace:*",
-    "@marie/llm": "workspace:*",
     "@marie/skills": "workspace:*",
     "sharp": "^0.34.5",
     "undici": "^7.3.0"

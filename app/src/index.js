@@ -3,11 +3,11 @@
 import fs from 'fs';
 import path from 'path';
 import login from '@marie/fca';
-import { LRUCache } from 'lru-cache';
 import {
   Brain,
   CommandRegistry,
   EventRegistry,
+  SimpleLRU,
   FBPlatform,
   eventBus,
   EVENTS,
@@ -211,7 +211,7 @@ async function start() {
         eventRegistry
       });
 
-      const processedMessages = new LRUCache({ max: 500 });
+      const processedMessages = new SimpleLRU({ max: 500 });
       brain.use(async (ctx, next) => {
         const msgID = ctx.event.messageID;
         if (processedMessages.has(msgID)) return;

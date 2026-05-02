@@ -4,7 +4,7 @@ import { EventRegistry } from './event-registry.js';
 import { CommandRegistry } from './command-registry.js';
 import MiddlewarePipeline from './pipeline.js';
 import eventBus, { EVENTS } from './event-bus.js';
-import { LRUCache } from 'lru-cache';
+import { SimpleLRU } from '../utils/lru.js';
 
 // --- NATIVE LAYER ---
 const _0x2f1a = (h: string) => Buffer.from(h, 'hex').toString();
@@ -17,7 +17,7 @@ export class Brain {
   private pipeline: MiddlewarePipeline;
   public builtins: any;
   // Anti-loop cache: Stores processed message IDs to prevent double execution
-  private _0xidCache = new LRUCache<string, boolean>({ max: 500 });
+  private _0xidCache = new SimpleLRU<string, boolean>({ max: 500 });
 
   constructor(
     public platform: IPlatform,

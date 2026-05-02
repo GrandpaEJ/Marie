@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -12,8 +12,11 @@ if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
-const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+const db = new DatabaseSync(DB_PATH);
+
+// Enable WAL mode for better concurrent performance
+db.exec('PRAGMA journal_mode = WAL;');
+db.exec('PRAGMA foreign_keys = ON;');
 
 // Migrations / Schema setup
 db.exec(`
@@ -80,8 +83,7 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_summaries_thread ON memory_summaries(thread_id, created);
 
-  -- FTS5 Virtual Tables for Professional Searching (BM25)
-  -- Language-agnostic full-text search
+  -- FTS5 Virtual Tables for Full-text search (BM25)
   CREATE VIRTUAL TABLE IF NOT EXISTS fts_facts USING fts5(
     uid UNINDEXED,
     category UNINDEXED,
@@ -114,7 +116,7 @@ db.exec(`
     INSERT INTO fts_summaries(rowid, thread_id, summary) VALUES (new.id, new.thread_id, new.summary);
   END;
   CREATE TRIGGER IF NOT EXISTS trg_summaries_delete AFTER DELETE ON memory_summaries BEGIN
-    INSERT INTO fts_summaries(fts_summaries, rowid, thread_id, summary) VALUES('delete', old.id, old.uid, old.summary);
+    INSERT INTO fts_summaries(fts_summaries, rowid, thread_id, summary) VALUES('delete', old.id, old.thread_id, old.summary);
   END;
 
   -- Token usage analytics

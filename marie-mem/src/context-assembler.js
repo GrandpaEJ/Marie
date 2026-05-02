@@ -1,4 +1,4 @@
-import { countTokens } from '@marie/llm';
+import { countTokens } from '@marie/brain';
 
 /**
  * Budget allocation ratios for context tiers.

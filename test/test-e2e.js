@@ -1,4 +1,4 @@
-import { LLMProvider } from "@marie/llm";
+import { LLMProvider } from "@marie/brain";
 import imageCommand from "../telegram/dist/commands/image.js";
 
 async function runTest() {

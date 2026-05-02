@@ -2,6 +2,7 @@ import { IMarieContext, IMarieEvent, IPlatform, IMarieUser, MarieMiddleware, ICo
 import { Brain, verifyIntegrity } from './core/brain.js';
 import { EventRegistry } from './core/event-registry.js';
 import { CommandRegistry } from './core/command-registry.js';
+import { SimpleLRU } from './utils/lru.js';
 import { FBPlatform } from './fb/facebook.js';
 import { wrapMiraiCommand, wrapMiraiEvent } from './fb/mirai.js';
 import { wrapGoatCommand, wrapGoatEvent } from './fb/goat.js';
@@ -14,6 +15,7 @@ export {
   verifyIntegrity,
   EventRegistry,
   CommandRegistry,
+  SimpleLRU,
   FBPlatform,
   wrapMiraiCommand,
   wrapMiraiEvent,
