@@ -7,12 +7,13 @@ pnpm-lock.yaml
 
 temp/
 dist/
+**/dist/
 *.tsbuildinfo
 
 # native code always hidden from public git 
 native/
-# Ignore compiled binaries, only upload during release
+
+# Ignore compiled binaries
 bin/
 !bin/guardian
 !bin/llm
-

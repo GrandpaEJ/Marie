@@ -38,9 +38,8 @@ async function start() {
   try {
     logger.info("Starting Marie v1...");
     
-    // 0. Ensure Native Binaries & Verify Integrity
+    // 0. Ensure Native Binaries
     await ensureBinaries();
-    verifyIntegrity();
 
     const config = loadConfig();
 
