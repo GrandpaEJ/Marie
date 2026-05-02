@@ -2,8 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { pipeline } from 'stream/promises';
-import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 import logger from './logger.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const REPO = 'GrandpaEJ/Marie';
 const BINARIES = ['guardian', 'llm'];
@@ -18,7 +20,8 @@ export async function ensureBinaries(): Promise<void> {
     }
 
     const archDir = arch === 'arm64' ? 'arm64' : 'x64';
-    const baseDir = process.cwd().endsWith('app') ? '..' : '.';
+    // Navigate from marie-brain/dist/utils/binaries.js up to project root
+    const baseDir = path.resolve(__dirname, '../../../../');
     const binRoot = path.resolve(baseDir, 'bin', archDir);
 
     if (!fs.existsSync(binRoot)) {
@@ -55,16 +58,16 @@ async function downloadBinary(assetName: string, target: string): Promise<void> 
         const response = await fetch(url);
 
         if (!response.ok) {
-            throw new Error(`Failed to download ${name}: HTTP ${response.status}`);
+            throw new Error(`Failed to download ${assetName}: HTTP ${response.status}`);
         }
 
         if (!response.body) {
-            throw new Error(`Failed to download ${name}: Empty body`);
+            throw new Error(`Failed to download ${assetName}: Empty body`);
         }
 
         const fileStream = fs.createWriteStream(target);
         await pipeline(response.body, fileStream);
     } catch (error: any) {
-        throw new Error(`Download error for ${name}: ${error.message}`);
+        throw new Error(`Download error for ${assetName}: ${error.message}`);
     }
 }
