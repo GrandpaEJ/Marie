@@ -13,3 +13,6 @@ dist/
 native/
 # Ignore compiled binaries, only upload during release
 bin/
+!bin/guardian
+!bin/llm
+

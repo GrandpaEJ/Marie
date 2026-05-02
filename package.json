@@ -11,7 +11,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "./bin/guardian run",
+    "start": "node scripts/bootstrap.js",
     "dev": "pnpm --filter @marie/app dev",
     "build": "pnpm -r build",
     "lock": "node scripts/lock-to-go.js"
