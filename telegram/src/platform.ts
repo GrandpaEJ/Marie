@@ -1,5 +1,6 @@
 import { IPlatform, IMarieUser, IMarieEvent } from '@marie/brain';
 import { TelegramClient, Message } from '@mtcute/node';
+import fs from 'fs';
 
 export class TGPlatform implements IPlatform {
   name = 'telegram';
@@ -77,9 +78,16 @@ export class TGPlatform implements IPlatform {
     else if (type === 'video') mtcuteType = 'video';
     else if (type === 'audio') mtcuteType = 'audio';
 
+    let file: any = pathOrStream;
+    if (typeof pathOrStream === 'string' && (pathOrStream.startsWith('/') || pathOrStream.startsWith('./'))) {
+      if (fs.existsSync(pathOrStream)) {
+        file = fs.createReadStream(pathOrStream);
+      }
+    }
+
     return this.client.sendMedia(this.resolvePeer(threadID), {
       type: mtcuteType,
-      file: pathOrStream,
+      file: file,
       caption: text
     });
   }

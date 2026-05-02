@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@marie/brain": "workspace:*",
+    "@marie/llm": "workspace:*",
     "@mtcute/node": "^0.29.6",
     "@mtcute/dispatcher": "^0.29.6",
     "dotenv": "^16.4.7"
