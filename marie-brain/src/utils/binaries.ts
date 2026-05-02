@@ -29,15 +29,27 @@ export async function ensureBinaries(): Promise<void> {
         const binPath = path.join(binRoot, binName);
         if (!fs.existsSync(binPath)) {
             logger.info(`📥 Binary missing: ${binName} (${archDir}). Downloading...`);
-            await downloadBinary(binName, archDir, binPath);
+            await downloadBinary(`${binName}-${archDir}`, binPath);
             fs.chmodSync(binPath, 0o755);
             logger.info(`✅ ${binName} downloaded successfully.`);
         }
     }
+
+    // Also ensure root launchers (shell scripts) exist
+    const binBase = path.resolve(baseDir, 'bin');
+    for (const launcher of BINARIES) {
+        const launcherPath = path.join(binBase, launcher);
+        if (!fs.existsSync(launcherPath)) {
+            logger.info(`📥 Launcher missing: ${launcher}. Downloading...`);
+            await downloadBinary(launcher, launcherPath);
+            fs.chmodSync(launcherPath, 0o755);
+            logger.info(`✅ Launcher ${launcher} downloaded successfully.`);
+        }
+    }
 }
 
-async function downloadBinary(name: string, arch: string, target: string): Promise<void> {
-    const url = `https://github.com/${REPO}/releases/latest/download/${name}-${arch}`;
+async function downloadBinary(assetName: string, target: string): Promise<void> {
+    const url = `https://github.com/${REPO}/releases/latest/download/${assetName}`;
     
     try {
         const response = await fetch(url);

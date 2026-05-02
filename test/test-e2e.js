@@ -1,5 +1,5 @@
 import { LLMProvider } from "@marie/llm";
-import imageCommand from "./telegram/dist/commands/image.js";
+import imageCommand from "../telegram/dist/commands/image.js";
 
 async function runTest() {
   console.log("Starting E2E Integration Test...");

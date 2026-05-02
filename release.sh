@@ -47,7 +47,8 @@ cp bin/arm64/guardian temp_release/guardian-arm64
 cp bin/arm64/llm temp_release/llm-arm64
 
 # Upload all at once
-gh release upload "$TAG_NAME" --repo "$REPO" temp_release/* --clobber
+gh release upload "$TAG_NAME" --repo "$REPO" temp_release/* bin/guardian bin/llm --clobber
+
 
 # Cleanup
 rm -rf temp_release
