@@ -1,4 +1,4 @@
-import { IMarieContext, IMarieEvent, IPlatform, IMarieUser, MarieMiddleware } from './types.js';
+import { IMarieContext, IMarieEvent, IPlatform, IMarieUser, MarieMiddleware, ICommand } from './types.js';
 import { Brain } from './core/brain.js';
 import { EventRegistry } from './core/event-registry.js';
 import { CommandRegistry } from './core/command-registry.js';
@@ -28,7 +28,8 @@ export {
   IMarieEvent,
   IPlatform,
   IMarieUser,
-  MarieMiddleware
+  MarieMiddleware,
+  ICommand
 };
 
 export * as userStore from './storage/user-store.js';
