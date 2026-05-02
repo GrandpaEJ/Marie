@@ -2,22 +2,17 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_DIR = path.join(__dirname, '../../../data');
 const DB_PATH = path.join(DB_DIR, 'marie.db');
-
 // Ensure data directory exists
 if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
+    fs.mkdirSync(DB_DIR, { recursive: true });
 }
-
 const db = new DatabaseSync(DB_PATH);
-
 // Enable WAL mode for better concurrent performance
 db.exec('PRAGMA journal_mode = WAL;');
 db.exec('PRAGMA foreign_keys = ON;');
-
 // Migrations / Schema setup
 db.exec(`
   -- Users & RBAC
@@ -133,5 +128,4 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_usage_thread ON token_usage(thread_id);
   CREATE INDEX IF NOT EXISTS idx_usage_uid ON token_usage(uid);
 `);
-
 export default db;

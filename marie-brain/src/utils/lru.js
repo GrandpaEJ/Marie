@@ -1,16 +1,14 @@
 /**
  * A lightweight, dependency-free LRU cache using a native Map.
  */
-export class SimpleLRU<K, V> {
-    private cache: Map<K, V>;
-    private max: number;
-
-    constructor(options: { max: number }) {
-        this.cache = new Map<K, V>();
+export class SimpleLRU {
+    cache;
+    max;
+    constructor(options) {
+        this.cache = new Map();
         this.max = options.max;
     }
-
-    get(key: K): V | undefined {
+    get(key) {
         const item = this.cache.get(key);
         if (item !== undefined) {
             // Refresh key position (move to most recent)
@@ -19,11 +17,11 @@ export class SimpleLRU<K, V> {
         }
         return item;
     }
-
-    set(key: K, value: V): void {
+    set(key, value) {
         if (this.cache.has(key)) {
             this.cache.delete(key);
-        } else if (this.cache.size >= this.max) {
+        }
+        else if (this.cache.size >= this.max) {
             // Evict oldest (first key in insertion order)
             const oldestKey = this.cache.keys().next().value;
             if (oldestKey !== undefined) {
@@ -32,20 +30,16 @@ export class SimpleLRU<K, V> {
         }
         this.cache.set(key, value);
     }
-
-    has(key: K): boolean {
+    has(key) {
         return this.cache.has(key);
     }
-
-    delete(key: K): void {
+    delete(key) {
         this.cache.delete(key);
     }
-
-    clear(): void {
+    clear() {
         this.cache.clear();
     }
-
-    get size(): number {
+    get size() {
         return this.cache.size;
     }
 }
