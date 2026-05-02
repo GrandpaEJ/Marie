@@ -39,5 +39,5 @@ export { default as db } from './storage/db.js';
 export { loadConfig } from './utils/config.js';
 export { default as logger } from './utils/logger.js';
 export { default as rbac } from './middlewares/rbac.js';
-export { LLMProvider } from '@marie/llm';
+export { LLMProvider, countTokens } from './llm/index.js';
 export { ensureBinaries } from './utils/binaries.js';

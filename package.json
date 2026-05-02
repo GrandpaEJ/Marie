@@ -26,7 +26,6 @@
   "dependencies": {
     "@marie/brain": "workspace:*",
     "@marie/fca": "workspace:*",
-    "@marie/llm": "workspace:*",
     "@marie/memory": "workspace:*",
     "@marie/skills": "workspace:*",
     "@marie/tg": "workspace:*",
