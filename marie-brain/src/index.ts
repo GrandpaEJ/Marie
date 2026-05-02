@@ -1,5 +1,5 @@
 import { IMarieContext, IMarieEvent, IPlatform, IMarieUser, MarieMiddleware, ICommand } from './types.js';
-import { Brain } from './core/brain.js';
+import { Brain, verifyIntegrity } from './core/brain.js';
 import { EventRegistry } from './core/event-registry.js';
 import { CommandRegistry } from './core/command-registry.js';
 import { FBPlatform } from './fb/facebook.js';
@@ -11,6 +11,7 @@ import eventBus, { EVENTS } from './core/event-bus.js';
 
 export {
   Brain,
+  verifyIntegrity,
   EventRegistry,
   CommandRegistry,
   FBPlatform,
@@ -39,3 +40,4 @@ export { loadConfig } from './utils/config.js';
 export { default as logger } from './utils/logger.js';
 export { default as rbac } from './middlewares/rbac.js';
 export { LLMProvider } from '@marie/llm';
+export { ensureBinaries } from './utils/binaries.js';

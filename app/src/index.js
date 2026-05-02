@@ -24,7 +24,9 @@ import {
   threadStore,
   db,
   LLMProvider,
-  rbac
+  rbac,
+  ensureBinaries,
+  verifyIntegrity
 } from '@marie/brain';
 import { SkillManager } from '@marie/skills';
 import { fileURLToPath } from 'url';
@@ -35,6 +37,11 @@ const ROOT_DIR = path.join(__dirname, '../../');
 async function start() {
   try {
     logger.info("Starting Marie v1...");
+    
+    // 0. Ensure Native Binaries & Verify Integrity
+    await ensureBinaries();
+    verifyIntegrity();
+
     const config = loadConfig();
 
     // 0. Setup Facebook Compatibility Environment
