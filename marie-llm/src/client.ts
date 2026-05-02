@@ -24,12 +24,21 @@ export interface ChatOptions {
   model?: string;
   temperature?: number;
   max_tokens?: number;
+  provider?: string;
 }
 
 export interface LLMResponse {
   content: string;
   model: string;
   usage?: any;
+  providerUsed?: string;
+  toolCalls?: any[];
+}
+
+export interface ImageResponse {
+  filePath: string;
+  provider: string;
+  error?: string;
 }
 
 export class LLMProvider {
@@ -48,6 +57,7 @@ export class LLMProvider {
     _0x9c8d();
     
     const input = JSON.stringify({
+      provider: options.provider || 'fallback',
       apiKey: this.apiKey,
       baseUrl: this.baseUrl,
       messages,
@@ -57,12 +67,48 @@ export class LLMProvider {
     });
 
     try {
-      const stdout = execFileSync(this.binPath, [input], { encoding: 'utf8' });
+      const stdout = execFileSync(this.binPath, ['chat', input], { encoding: 'utf8' });
+      const response = JSON.parse(stdout);
+      if (response.error) throw new Error(response.error);
+      
+      const res: LLMResponse = {
+        content: response.content,
+        model: response.model,
+        usage: response.usage,
+      };
+
+      if (response.tool_calls) {
+        res.toolCalls = response.tool_calls;
+      }
+
+      // the binary sets the model as "model (via providerName)" if fallback was used
+      const providerMatch = response.model.match(/\(via (.*)\)/);
+      if (providerMatch) {
+        res.providerUsed = providerMatch[1];
+      }
+
+      return res;
+    } catch (error: any) {
+      console.error(_0x1f2a('5b4d617269654c4c4d2d4e61746976655d204572726f723a'), error.message);
+      throw error;
+    }
+  }
+
+  async generateImage(prompt: string, provider?: string): Promise<ImageResponse> {
+    _0x9c8d();
+
+    const input = JSON.stringify({
+      prompt,
+      provider: provider || 'pollinations'
+    });
+
+    try {
+      const stdout = execFileSync(this.binPath, ['image', input], { encoding: 'utf8' });
       const response = JSON.parse(stdout);
       if (response.error) throw new Error(response.error);
       return response;
     } catch (error: any) {
-      console.error(_0x1f2a('5b4d617269654c4c4d2d4e61746976655d204572726f723a'), error.message);
+      console.error('[MarieLLM-Image] Error:', error.message);
       throw error;
     }
   }

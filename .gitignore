@@ -9,6 +9,7 @@ temp/
 dist/
 *.tsbuildinfo
 
+# native code always hidden from public git 
 native/
 # Ignore compiled binaries, only keep the launchers
 bin/x64/
