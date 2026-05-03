@@ -29,26 +29,40 @@ export default {
                 filteredCommands.set(cmd.name.toLowerCase(), cmd);
             }
         }
+        // ─── TOOL/SKILL DETAILS ───
+        if (commandArg && ctx.skills) {
+            const tool = ctx.skills.tools?.get(commandArg);
+            if (tool) {
+                let info = `╭━━━[ 🛠️ TOOL: ${tool.name.toUpperCase()} ]━━━╮\n`;
+                info += `📝 Description: ${tool.detailedDescription || tool.description || "No description available"}\n`;
+                info += `🏷️  Category: ${tool.category || "utility"}\n`;
+                info += `⚠️  Risk Level: ${tool.riskLevel || "low"}\n`;
+                
+                if (tool.examples && tool.examples.length > 0) {
+                    info += `\n💡 Examples:\n`;
+                    tool.examples.forEach(ex => {
+                        info += `├─ Input: ${JSON.stringify(ex.input)}\n`;
+                        if (ex.explanation) info += `└─ ${ex.explanation}\n`;
+                    });
+                }
+                
+                info += `\n╰━━━━━━━━━━━━━━━━╯`;
+                return ctx.reply(info);
+            }
+        }
+
         // ─── COMMAND DETAILS ───
         if (commandArg && filteredCommands.has(commandArg)) {
             const command = filteredCommands.get(commandArg);
             const raw = command.rawModule || {};
             const cmdConfig = raw.config || command.config || command;
-            // Determine Command Type
-            let type = "Native";
-            if (raw.run && raw.config && (raw.config.hasPermssion !== undefined || raw.config.commandCategory))
-                type = "Mirai";
-            else if (raw.onStart && raw.config)
-                type = "Goat";
-            let info = `╭━━━[ ${command.name.toUpperCase()} ]━━━╮\n`;
+            
+            let info = `╭━━━[ 📜 CMD: ${command.name.toUpperCase()} ]━━━╮\n`;
             info += `📝 Description: ${cmdConfig.description || "No description available"}\n`;
             info += `🏷️  Category: ${cmdConfig.commandCategory || cmdConfig.category || "General"}\n`;
-            info += `⏱️  Cooldown: ${cmdConfig.cooldowns || cmdConfig.countDown || cmdConfig.cooldown || 0}s\n`;
-            info += `🔒 Permission: ${command.minRole || "user"} (Level ${cmdConfig.hasPermssion ?? cmdConfig.role ?? 0})\n`;
-            info += `📖 Usage: ${prefix}${command.name} ${cmdConfig.usages || cmdConfig.usage || (typeof cmdConfig.guide === 'string' ? cmdConfig.guide : cmdConfig.guide?.en) || ""}\n`;
-            info += `👤 Credits: ${cmdConfig.credits || cmdConfig.author || "Unknown"}\n`;
-            info += `🛠️  Type: ${type}\n`;
-            info += `╰━━━━━━━━━━╯`;
+            info += `🔒 Permission: ${command.minRole || "user"}\n`;
+            info += `📖 Usage: ${prefix}${command.name} ${cmdConfig.usages || cmdConfig.usage || ""}\n`;
+            info += `╰━━━━━━━━━━━━━━━━╯`;
             return ctx.reply(info.replace(/\{pn\}/g, prefix));
         }
         // ─── CATEGORY LISTING (PAGINATED) ───
