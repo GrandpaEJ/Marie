@@ -2,7 +2,14 @@ import { z } from 'zod';
 
 export default {
   name: 'calculator',
-  description: 'Evaluate mathematical expressions',
+  description: 'Evaluate mathematical expressions precisely.',
+  detailedDescription: 'Use this tool for any mathematical calculations, even simple ones, to ensure absolute accuracy. Supports standard operators, parentheses, and basic math functions.',
+  category: 'utility',
+  riskLevel: 'low',
+  examples: [
+    { input: { expression: '25 * 4 / (2 + 3)' }, explanation: 'Solving a math expression' },
+    { input: { expression: 'Math.sqrt(144)' }, explanation: 'Calculating square root' }
+  ],
   schema: z.object({
     expression: z.string().describe('The math expression to evaluate (e.g., 2 + 2 * 4)')
   }),
