@@ -218,7 +218,20 @@ export default {
         }
         catch (error) {
             console.error("Chat handler error:", error);
-            api.sendMessage(`[Marie] Chat error: ${error.message}`, threadID);
+            try {
+                // Mask sensitive info like API keys in error message
+                let errMsg = error.message;
+                
+                // Mask OpenRouter/OpenAI keys
+                errMsg = errMsg.replace(/sk-[a-zA-Z0-8]{20,}/g, 'sk-***');
+                
+                // Truncate error message to avoid MESSAGE_TOO_LONG
+                const finalMsg = errMsg.length > 500 ? errMsg.slice(0, 500) + "..." : errMsg;
+                
+                await api.sendMessage(`[Marie] Chat error: ${finalMsg}`, threadID);
+            } catch (err) {
+                console.error("Failed to send error message to Telegram:", err.message);
+            }
         }
         finally {
             await api.sendTypingIndicator(false, threadID);

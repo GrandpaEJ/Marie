@@ -8,8 +8,8 @@ export * from './client.js';
  */
 export const countTokens = (text) => {
     try {
-        // Navigate from marie-brain/dist/llm/index.js up to the project root
-        const binPath = path.resolve(__dirname, '../../../../bin/llm');
+        // Navigate from marie-brain/src/llm/index.js up to the project root
+        const binPath = path.resolve(__dirname, '../../../bin/llm');
         const stdout = execFileSync(binPath, ['tokenize', text || ''], { encoding: 'utf8' });
         return parseInt(stdout.trim(), 10) || 0;
     }

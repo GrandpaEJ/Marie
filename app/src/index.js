@@ -56,7 +56,7 @@ async function start() {
 
 
     // 2. Load Shared Commands from Brain
-    const sharedCommandsPath = path.join(ROOT_DIR, 'marie-brain/dist/commands');
+    const sharedCommandsPath = path.join(ROOT_DIR, 'marie-brain/src/commands');
     if (fs.existsSync(sharedCommandsPath)) {
       await registry.loadCommands(sharedCommandsPath);
     }
