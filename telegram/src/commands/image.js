@@ -1,4 +1,3 @@
-import { IMarieContext, ICommand } from "@marie/brain";
 import fs from "fs";
 
 export default {
@@ -8,7 +7,7 @@ export default {
   usage: "<prompt>",
   cooldown: 5,
   
-  handler: async (ctx: IMarieContext) => {
+  handler: async (ctx) => {
     const prompt = ctx.args.join(" ");
     
     if (!prompt) {
@@ -21,17 +20,15 @@ export default {
     try {
       const response = await ctx.llm.generateImage(prompt);
       
-      // Send the image with the prompt as the caption
       await ctx.platform.sendMedia(ctx.event.threadID, response.filePath, "image", `🎨 ${prompt}`);
       
-      // Clear the temporary file
       try {
         fs.unlinkSync(response.filePath);
       } catch (e) {
         console.error("Failed to delete temp image:", e);
       }
-    } catch (error: any) {
+    } catch (error) {
       await ctx.reply(`❌ Error generating image: ${error.message}`);
     }
   }
-} as ICommand;
+};

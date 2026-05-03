@@ -1,9 +1,7 @@
-import { IMarieContext } from '@marie/brain';
-
 export default {
   name: 'info',
   description: 'Get information about this chat',
-  handler: async (ctx: IMarieContext) => {
+  handler: async (ctx) => {
     const { event, platform } = ctx;
     
     try {
@@ -17,7 +15,7 @@ export default {
       msg += `• *Type*: ${event.isGroup ? 'Group' : 'Private'}\n`;
       
       await ctx.reply(msg);
-    } catch (error: any) {
+    } catch (error) {
       await ctx.reply(`Error fetching info: ${error.message}`);
     }
   }

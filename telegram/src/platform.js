@@ -1,13 +1,14 @@
-import { IPlatform, IMarieUser, IMarieEvent } from '@marie/brain';
-import { TelegramClient, Message } from '@mtcute/node';
 import fs from 'fs';
 
-export class TGPlatform implements IPlatform {
+export class TGPlatform {
   name = 'telegram';
 
-  constructor(public client: TelegramClient) {}
+  constructor(client) {
+    this.client = client;
+    this.typingIntervals = new Map();
+  }
 
-  private resolvePeer(id: string): any {
+  resolvePeer(id) {
     // If it looks like a number, convert it. If it starts with a letter, keep as string (username).
     if (/^-?\d+$/.test(id)) {
       return parseInt(id);
@@ -15,22 +16,21 @@ export class TGPlatform implements IPlatform {
     return id;
   }
 
-  getSelfID(): string {
-    const self = (this.client.storage as any).self?.get?.();
+  getSelfID() {
+    const self = this.client.storage.self?.get?.();
     return self?.userId?.toString() || '';
   }
 
-  async sendMessage(arg1: string | any, arg2: string, arg3?: string): Promise<any> {
+  async sendMessage(arg1, arg2, arg3) {
     // Handle both (threadID, text, replyTo) and (payload, threadID, replyTo)
-    let threadID: string;
-    let text: string;
-    let replyTo: string | undefined;
-    let attachments: any[] = [];
+    let threadID;
+    let text;
+    let replyTo;
+    let attachments = [];
 
     if (typeof arg1 === 'string') {
       // IDs in Telegram are usually numeric (123456) or usernames without spaces
-      // Message text usually has spaces, newlines, or is quite long
-      const looksLikeID = (str: string) => /^-?\d+$/.test(str) || (str.length < 25 && !str.includes(' ') && !str.includes('\n'));
+      const looksLikeID = (str) => /^-?\d+$/.test(str) || (str.length < 25 && !str.includes(' ') && !str.includes('\n'));
       
       const isArg1ID = looksLikeID(arg1);
       const isArg2ID = arg2 && looksLikeID(arg2);
@@ -46,7 +46,6 @@ export class TGPlatform implements IPlatform {
         text = arg2;
         replyTo = arg3;
       } else {
-        // Fallback: If we can't find a valid ID, don't try to use the text as an ID
         console.error(`[Marie-TG] Critical: Could not resolve a valid threadID. arg1: ${arg1.substring(0, 20)}...`);
         return; 
       }
@@ -62,8 +61,6 @@ export class TGPlatform implements IPlatform {
     const peer = this.resolvePeer(threadID);
 
     if (attachments.length > 0) {
-      // Send first attachment as primary, others as additional media if supported
-      // For now, just send the text with the first attachment
       return this.sendMedia(threadID, attachments[0], 'image', text);
     }
 
@@ -72,13 +69,13 @@ export class TGPlatform implements IPlatform {
     });
   }
 
-  async sendMedia(threadID: string, pathOrStream: any, type: 'image' | 'video' | 'audio' | 'file', text?: string): Promise<any> {
-    let mtcuteType: any = 'document';
+  async sendMedia(threadID, pathOrStream, type, text) {
+    let mtcuteType = 'document';
     if (type === 'image') mtcuteType = 'photo';
     else if (type === 'video') mtcuteType = 'video';
     else if (type === 'audio') mtcuteType = 'audio';
 
-    let file: any = pathOrStream;
+    let file = pathOrStream;
     if (typeof pathOrStream === 'string' && (pathOrStream.startsWith('/') || pathOrStream.startsWith('./'))) {
       if (fs.existsSync(pathOrStream)) {
         file = fs.createReadStream(pathOrStream);
@@ -92,7 +89,7 @@ export class TGPlatform implements IPlatform {
     });
   }
 
-  async getUserInfo(uid: string): Promise<IMarieUser> {
+  async getUserInfo(uid) {
     const users = await this.client.getUsers(this.resolvePeer(uid));
     const u = users[0];
     if (!u) throw new Error(`User not found: ${uid}`);
@@ -104,22 +101,20 @@ export class TGPlatform implements IPlatform {
     };
   }
 
-  async getThreadInfo(threadID: string): Promise<any> {
+  async getThreadInfo(threadID) {
     return this.client.getChat(this.resolvePeer(threadID));
   }
 
-  async setTyping(threadID: string, isTyping: boolean): Promise<void> {
+  async setTyping(threadID, isTyping) {
     if (isTyping) {
       await this.client.sendTyping(this.resolvePeer(threadID));
     }
   }
 
-  private typingIntervals: Map<string, NodeJS.Timeout> = new Map();
-
   // Facebook compatibility alias
-  async sendTypingIndicator(arg1: boolean | string, arg2?: string): Promise<void> {
-    let isTyping: boolean;
-    let threadID: string | undefined;
+  async sendTypingIndicator(arg1, arg2) {
+    let isTyping;
+    let threadID;
 
     if (typeof arg1 === 'boolean') {
       isTyping = arg1;
@@ -136,19 +131,19 @@ export class TGPlatform implements IPlatform {
     if (isTyping) {
       // Clear existing interval if any
       if (this.typingIntervals.has(threadID)) {
-        clearInterval(this.typingIntervals.get(threadID)!);
+        clearInterval(this.typingIntervals.get(threadID));
       }
 
       // Initial typing
       await this.client.sendTyping(peer);
 
-      // Set interval to refresh typing status every 4 seconds (Telegram timeout is ~5s)
+      // Set interval to refresh typing status every 4 seconds
       const interval = setInterval(async () => {
         try {
           await this.client.sendTyping(peer);
         } catch (e) {
           clearInterval(interval);
-          this.typingIntervals.delete(threadID!);
+          this.typingIntervals.delete(threadID);
         }
       }, 4000);
 
@@ -163,11 +158,11 @@ export class TGPlatform implements IPlatform {
     }
   }
 
-  async unsendMessage(messageID: string): Promise<void> {
-    await this.client.deleteMessages([parseInt(messageID) as any]);
+  async unsendMessage(messageID) {
+    await this.client.deleteMessages([parseInt(messageID)]);
   }
 
-  static toMarieEvent(msg: Message): IMarieEvent {
+  static toMarieEvent(msg) {
     const chat = msg.chat;
     const sender = msg.sender;
     
@@ -182,7 +177,7 @@ export class TGPlatform implements IPlatform {
       mentions: {},
       attachments: msg.media ? [msg.media] : [],
       senderName: sender.displayName,
-      threadName: (chat as any).displayName || (chat as any).title || sender.displayName
+      threadName: chat.displayName || chat.title || sender.displayName
     };
   }
 }

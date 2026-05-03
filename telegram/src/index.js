@@ -4,14 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export interface TGConfig {
-  apiId: number;
-  apiHash: string;
-  storage?: string;
-  session?: string;
-}
-
-export async function createTGPlatform(config: TGConfig): Promise<TGPlatform> {
+export async function createTGPlatform(config) {
   const client = new TelegramClient({
     apiId: config.apiId,
     apiHash: config.apiHash,

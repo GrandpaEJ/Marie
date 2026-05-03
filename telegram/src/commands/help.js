@@ -1,9 +1,7 @@
-import { IMarieContext } from '@marie/brain';
-
 export default {
   name: 'help',
   description: 'Aesthetic & Category-wise Help Guide',
-  handler: async (ctx: IMarieContext) => {
+  handler: async (ctx) => {
     const { registry, config, args } = ctx;
     const prefix = config.prefix || '.';
     const botName = config.botName || "Marie";
@@ -14,7 +12,7 @@ export default {
     const filteredCommands = new Map();
     const seen = new Set();
 
-    for (const cmd of allCommands as any[]) {
+    for (const cmd of allCommands) {
       if (seen.has(cmd)) continue;
       seen.add(cmd);
       if (!cmd.hidden) {
@@ -36,7 +34,7 @@ export default {
 
     // ─── CASE 2: CATEGORY LISTING ───
     const commandList = Array.from(filteredCommands.values());
-    const categories: Record<string, string[]> = {};
+    const categories = {};
 
     commandList.forEach((cmd) => {
       const cat = cmd.category || cmd.commandCategory || "General";
@@ -55,7 +53,6 @@ export default {
       const catCmds = categories[cat].sort();
       helpMsg += `╭─── 〔 ${numberFont[i] || (i+1)} *${cat.toUpperCase()}* 〕\n`;
       
-      // Grid style for commands
       const grid = 2;
       for (let j = 0; j < catCmds.length; j += grid) {
         const row = catCmds.slice(j, j + grid);
