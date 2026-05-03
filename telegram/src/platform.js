@@ -111,8 +111,10 @@ export class TGPlatform {
     }
   }
 
-  // Facebook compatibility alias
-  async sendTypingIndicator(arg1, arg2) {
+  /**
+   * Enhanced typing indicator with specific actions.
+   */
+  async sendTypingIndicator(arg1, arg2, action = 'typing') {
     let isTyping;
     let threadID;
 
@@ -129,18 +131,18 @@ export class TGPlatform {
     const peer = this.resolvePeer(threadID);
 
     if (isTyping) {
-      // Clear existing interval if any
       if (this.typingIntervals.has(threadID)) {
         clearInterval(this.typingIntervals.get(threadID));
       }
 
-      // Initial typing
-      await this.client.sendTyping(peer);
+      const mtcuteAction = action === 'photo' ? 'upload_photo' : 
+                          action === 'document' ? 'upload_document' : 'typing';
 
-      // Set interval to refresh typing status every 4 seconds
+      await this.client.sendTyping(peer, mtcuteAction);
+
       const interval = setInterval(async () => {
         try {
-          await this.client.sendTyping(peer);
+          await this.client.sendTyping(peer, mtcuteAction);
         } catch (e) {
           clearInterval(interval);
           this.typingIntervals.delete(threadID);
@@ -149,12 +151,22 @@ export class TGPlatform {
 
       this.typingIntervals.set(threadID, interval);
     } else {
-      // Stop typing
       const interval = this.typingIntervals.get(threadID);
       if (interval) {
         clearInterval(interval);
         this.typingIntervals.delete(threadID);
       }
+    }
+  }
+
+  /**
+   * Sends a reaction to a message.
+   */
+  async sendReaction(threadID, messageID, reaction) {
+    try {
+      await this.client.sendReaction(this.resolvePeer(threadID), parseInt(messageID), reaction);
+    } catch (e) {
+      console.warn(`[Marie-TG] Failed to send reaction: ${e.message}`);
     }
   }
 
