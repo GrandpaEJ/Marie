@@ -63,8 +63,13 @@ async function start() {
 
     // 2.6 Load Skills
     const skills = new SkillManager();
-    const toolsPath = path.join(ROOT_DIR, 'marie-skills/dist/tools');
-    await skills.loadTools(toolsPath);
+    const staticToolsPath = path.join(ROOT_DIR, 'marie-skills/dist/tools');
+    const dynamicToolsPath = path.join(ROOT_DIR, 'marie-skills/tools/dynamic');
+    
+    await skills.loadTools(staticToolsPath);
+    if (fs.existsSync(dynamicToolsPath)) {
+      await skills.loadTools(dynamicToolsPath);
+    }
 
     // 2.7 Sync global.client.commands for legacy script compatibility
     const g = global;
