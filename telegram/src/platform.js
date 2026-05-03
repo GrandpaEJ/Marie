@@ -166,7 +166,7 @@ export class TGPlatform {
     const chat = msg.chat;
     const sender = msg.sender;
     
-    return {
+    const event = {
       messageID: msg.id.toString(),
       threadID: chat.id.toString(),
       senderID: sender.id.toString(),
@@ -179,5 +179,7 @@ export class TGPlatform {
       senderName: sender.displayName,
       threadName: chat.displayName || chat.title || sender.displayName
     };
+    console.log('[Marie-TG] Converted event:', event);
+    return event;
   }
 }

@@ -6,6 +6,7 @@ export class CommandRegistry {
         this.prefixes = Array.isArray(prefix) ? prefix : [prefix];
     }
     register(command) {
+        console.log(`[CommandRegistry] Registering command: ${command.name}`);
         this.commands.set(command.name.toLowerCase(), command);
         if (command.aliases) {
             for (const alias of command.aliases) {

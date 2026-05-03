@@ -33,7 +33,8 @@ export class LLMProvider {
             apiKey: this.apiKey,
             baseUrl: this.baseUrl,
             messages,
-            model: options.model || 'openrouter/free',
+            model: options.model || 'google/gemma-4-31b-it:free',
+            fallbackModel: options.fallbackModel || '',
             temperature: options.temperature ?? 0.7,
             max_tokens: options.max_tokens || 1024
         });

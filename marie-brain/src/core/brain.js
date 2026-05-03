@@ -64,6 +64,9 @@ export class Brain {
         }
         catch (_0x9999) {
             console.error(_0x2f1a('5b427261696e5d20506970656c696e65204572726f723a'), _0x9999);
+            try {
+                await _0xabcd.reply(`[Marie] Global Pipeline Error: ${_0x9999.message}`);
+            } catch (e) {}
         }
     }
     _0x8a9b() {
@@ -150,6 +153,7 @@ export class Brain {
                 return await next();
             if (!ctx.config.rp?.enabled)
                 return await next();
+            console.log(`[Brain] Fallback chat triggered for: ${ctx.event.body}`);
             try {
                 const _0xchat = this.registry.commands.get(_0x2f1a('63686174'));
                 if (_0xchat) {

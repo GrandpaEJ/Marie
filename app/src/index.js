@@ -148,10 +148,11 @@ async function start() {
         logger.info("Initializing Telegram platform...");
 
         // Load Telegram Specific Commands
-        const tgCommandsPath = path.join(ROOT_DIR, 'telegram/dist/commands');
+        const tgCommandsPath = path.join(ROOT_DIR, 'telegram/src/commands');
         if (fs.existsSync(tgCommandsPath)) {
           await registry.loadCommands(tgCommandsPath);
         }
+        logger.info(`Loaded ${registry.commands.size} commands in total.`);
 
         const tgConfig = config.platforms?.telegram;
         const botToken = tgConfig?.token || process.env.TELEGRAM_BOT_TOKEN;

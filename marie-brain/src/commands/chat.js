@@ -28,14 +28,16 @@ export default {
         const { api, event, llm, config, user, skills } = ctx;
         const { threadID, senderID, body, messageID } = event;
         const senderName = user?.name || event.senderName || null;
+        console.log(`[Chat] Incoming message from ${senderID}: ${body}`);
         await api.sendTypingIndicator(true, threadID);
         try {
             const mm = getMemoryManager(config);
             const { messages, model } = mm.buildContext(threadID, senderID, senderName, body);
             const tools = skills ? skills.getOpenAITools() : [];
-            console.log(`[Chat] Calling LLM with ${messages.length} messages and ${tools.length} tools...`);
+            console.log(`[Chat] Calling LLM (${model}) with ${messages.length} messages and ${tools.length} tools...`);
             let response = await llm.chat(messages, {
                 model: model,
+                fallbackModel: config.llm.fallbackModel,
                 temperature: config.llm.temperature,
                 tools: tools.length > 0 ? tools : undefined
             });
