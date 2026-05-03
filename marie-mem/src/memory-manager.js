@@ -2,16 +2,14 @@ import { assembleContext } from './context-assembler.js';
 import { extractFacts } from './fact-extractor.js';
 import { maybeSummarize } from './summarizer.js';
 import * as storage from './storage.js';
+import { activeBuffer } from './active-buffer.js';
+import { sessionManager } from './session-manager.js';
+import { buildMasterPrompt } from './prompts/master.js';
 
 /**
  * Central orchestrator for Marie's multi-tier memory system.
- * Coordinates STM, LTM, Facts, and Identity layers.
  */
 export class MemoryManager {
-  /**
-   * @param {Object} config - Project configuration
-   * @param {Object} dependencies - { db, userStore, threadStore }
-   */
   constructor(config, dependencies) {
     this.config = config;
     this.db = dependencies.db;
@@ -19,14 +17,27 @@ export class MemoryManager {
     this.threadStore = dependencies.threadStore;
     this.maxTokens = config.llm?.maxContextTokens || 8192;
 
-    // Initialize storage with db
     storage.initStorage(this.db);
+    sessionManager.init(this.db);
   }
 
   /**
    * Build the full context for an LLM call.
    */
-  buildContext(threadId, senderUid, senderName, currentMessage) {
+  buildContext(threadId, senderUid, senderName, currentMessage, tools = [], providerName = 'openai') {
+    // 0. Clean expired facts
+    storage.cleanExpiredFacts();
+
+    // 0.5 Handle Session
+    const { session, isNew } = sessionManager.getOrCreateSession(threadId);
+    let sessionContext = null;
+    if (isNew) {
+      const lastSummary = sessionManager.getLastSessionSummary(threadId);
+      if (lastSummary) {
+        sessionContext = `[Welcome Back] Last time you talked, the session ended with this summary: ${lastSummary}`;
+      }
+    }
+
     // 1. Ensure user exists
     let user = this.userStore.getUser(senderUid);
     if (!user) {
@@ -56,15 +67,28 @@ export class MemoryManager {
     const summaries = storage.searchSummaries(threadId, currentMessage, 5);
     const stmMessages = storage.getActiveMessages(threadId, 20);
 
-    // 4. Assemble context
-    const messages = assembleContext({
+    // 4. Build Master Prompt
+    const masterPrompt = buildMasterPrompt({
       persona,
-      facts,
+      userName: senderName || user.name,
+      tools,
+      providerUsed: providerName,
+      userFacts: facts.map(f => `${f.fact_key}: ${f.fact_value}`).join('\n'),
+      sessionContext,
+      platform: this.config.platform || 'telegram'
+    });
+
+    // 5. Assemble context
+    const messages = assembleContext({
+      persona: masterPrompt,
+      facts: [], // Already included in master prompt
       userName: senderName || user.name,
       summaries,
       stmMessages,
       currentMessage,
-      maxTokens: this.maxTokens
+      maxTokens: this.maxTokens,
+      config: { ...this.config, useMasterPrompt: true },
+      sessionContext: null // Already included in master prompt
     });
 
     return { messages, persona, model, user };
@@ -74,9 +98,16 @@ export class MemoryManager {
    * Post-response processing.
    */
   async afterResponse(threadId, senderUid, userMessage, response, llm) {
+    // Update session activity
+    sessionManager.touch(threadId);
+
     // 1. Store messages
     this.threadStore.addMessage(threadId, 'user', userMessage, 0, senderUid);
     this.threadStore.addMessage(threadId, 'assistant', response.content, response.usage?.completion_tokens);
+
+    // 1.5 Push to ActiveBuffer for instant access
+    activeBuffer.push(threadId, { role: 'user', content: userMessage, timestamp: Date.now(), uid: senderUid });
+    activeBuffer.push(threadId, { role: 'assistant', content: response.content, timestamp: Date.now(), tokens: response.usage?.completion_tokens });
 
     // 2. Log token usage
     this.threadStore.logUsage(
