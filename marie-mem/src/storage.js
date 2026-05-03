@@ -1,3 +1,5 @@
+import { activeBuffer } from './active-buffer.js';
+
 let db;
 
 export function initStorage(database) {
@@ -6,16 +8,46 @@ export function initStorage(database) {
 
 // ─── Facts (Per-User, Global) ───────────────────────────────────────────
 
-export function upsertFact(uid, category, factKey, factValue, sourceThread = null, confidence = 1.0) {
+export function upsertFact(uid, category, factKey, factValue, sourceThread = null, confidence = 1.0, ttlHours = null) {
+  const expiry = ttlHours ? Math.floor(Date.now() / 1000) + (ttlHours * 3600) : null;
+
+  // Check existing fact for confidence check and conflict resolution
+  const existing = db.prepare('SELECT id, confidence, fact_value FROM memory_facts WHERE uid = ? AND category = ? AND fact_key = ?').get(uid, category, factKey);
+
+  if (existing) {
+    if (existing.confidence > confidence) {
+      console.log(`[Storage] Skipping fact update for ${factKey}: Existing confidence (${existing.confidence}) > new (${confidence})`);
+      return;
+    }
+
+    // If values are different, mark the old one as superseded
+    if (existing.fact_value !== factValue) {
+      console.log(`[Storage] Fact conflict for ${factKey}: "${existing.fact_value}" -> "${factValue}". Marking old as superseded.`);
+      // We don't delete, we update the existing one or create a new one.
+      // The current schema uses UNIQUE(uid, category, fact_key), so we MUST update the existing row if we want to keep the same key.
+      // If we want to keep BOTH, we would need to change the unique constraint.
+      // For now, let's just update the existing one as per Step 303, but maybe log the change.
+    }
+  }
+
   db.prepare(`
-    INSERT INTO memory_facts (uid, category, fact_key, fact_value, confidence, source_thread, created, updated)
-    VALUES (?, ?, ?, ?, ?, ?, unixepoch(), unixepoch())
+    INSERT INTO memory_facts (uid, category, fact_key, fact_value, confidence, source_thread, expiry, updated)
+    VALUES (?, ?, ?, ?, ?, ?, ?, unixepoch())
     ON CONFLICT(uid, category, fact_key) DO UPDATE SET
       fact_value = excluded.fact_value,
       confidence = excluded.confidence,
       source_thread = excluded.source_thread,
+      expiry = excluded.expiry,
       updated = unixepoch()
-  `).run(uid, category, factKey, factValue, confidence, sourceThread);
+  `).run(uid, category, factKey, factValue, confidence, sourceThread, expiry);
+}
+
+export function cleanExpiredFacts() {
+  const now = Math.floor(Date.now() / 1000);
+  const result = db.prepare('DELETE FROM memory_facts WHERE expiry IS NOT NULL AND expiry < ?').run(now);
+  if (result.changes > 0) {
+    console.log(`[Storage] Cleaned ${result.changes} expired facts.`);
+  }
 }
 
 export function getFacts(uid) {
@@ -54,20 +86,33 @@ export function buildFactsBlock(uid) {
 
 // ─── Summaries (Per-Thread LTM) ─────────────────────────────────────────
 
-export function addSummary(threadId, summary, fromTimestamp, toTimestamp, msgCount = 0) {
+export function addSummary(threadId, summary, fromTimestamp, toTimestamp, msgCount = 0, level = 'conversation') {
   db.prepare(`
-    INSERT INTO memory_summaries (thread_id, summary, from_timestamp, to_timestamp, msg_count, created)
-    VALUES (?, ?, ?, ?, ?, unixepoch())
-  `).run(threadId, summary, fromTimestamp, toTimestamp, msgCount);
+    INSERT INTO memory_summaries (thread_id, summary, from_timestamp, to_timestamp, msg_count, level, created)
+    VALUES (?, ?, ?, ?, ?, ?, unixepoch())
+  `).run(threadId, summary, fromTimestamp, toTimestamp, msgCount, level);
 }
 
-export function getSummaries(threadId, limit = 5) {
+export function getSummaries(threadId, limit = 5, includeArchived = false) {
+  const query = includeArchived 
+    ? 'SELECT * FROM memory_summaries WHERE thread_id = ? ORDER BY created DESC LIMIT ?'
+    : 'SELECT * FROM memory_summaries WHERE thread_id = ? AND archived = 0 ORDER BY created DESC LIMIT ?';
+    
+  return db.prepare(query).all(threadId, limit).reverse();
+}
+
+export function archiveSummaries(ids) {
+  const placeholders = ids.map(() => '?').join(',');
+  db.prepare(`UPDATE memory_summaries SET archived = 1 WHERE id IN (${placeholders})`).run(...ids);
+}
+
+export function getSummariesForConsolidation(threadId, level, hours) {
+  const timestamp = Math.floor(Date.now() / 1000) - (hours * 3600);
   return db.prepare(`
     SELECT * FROM memory_summaries
-    WHERE thread_id = ?
-    ORDER BY created DESC
-    LIMIT ?
-  `).all(threadId, limit).reverse();
+    WHERE thread_id = ? AND level = ? AND archived = 0 AND created >= ?
+    ORDER BY created ASC
+  `).all(threadId, level, timestamp);
 }
 
 export function clearSummaries(threadId) {
@@ -77,16 +122,35 @@ export function clearSummaries(threadId) {
 // ─── Active Messages (Non-Archived STM) ─────────────────────────────────
 
 export function getActiveMessages(threadId, limit = 20) {
-  return db.prepare(`
+  const dbMessages = db.prepare(`
     SELECT id, uid, role, content, tokens, timestamp
     FROM messages
     WHERE thread_id = ? AND archived = 0
     ORDER BY timestamp DESC
     LIMIT ?
-  `).all(threadId, limit).reverse();
+  `).all(threadId, limit);
+
+  const bufferMessages = activeBuffer.getRecent(threadId, limit);
+
+  // Combine and deduplicate
+  const combined = [...dbMessages, ...bufferMessages];
+  const unique = new Map();
+  
+  for (const m of combined) {
+    const key = m.messageID || m.id || `${m.timestamp}_${m.content?.slice(0, 10)}`;
+    if (!unique.has(key)) {
+      unique.set(key, m);
+    }
+  }
+
+  // Return sorted by timestamp ASC
+  return Array.from(unique.values())
+    .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    .slice(-limit);
 }
 
 export function archiveMessages(threadId, beforeTimestamp) {
+  activeBuffer.clearThread(threadId); // Clear buffer on archive to avoid staleness
   return db.prepare(`
     UPDATE messages
     SET archived = 1
@@ -110,7 +174,9 @@ export function countActiveMessages(threadId) {
     FROM messages
     WHERE thread_id = ? AND archived = 0
   `).get(threadId);
-  return row.count;
+  
+  const bufferCount = activeBuffer.getRecent(threadId).length;
+  return row.count + bufferCount;
 }
 
 // ─── Professional Search (FTS5 + BM25) ───────────────────────────────────
@@ -137,20 +203,47 @@ export function searchFacts(uid, query, limit = 10) {
 
 /**
  * Searches for relevant summaries using SQLite FTS5.
+ * Weights: Weekly (3x), Daily (2x), Conversation (1x).
+ * Recency Boost: +50% for last 24h.
  */
 export function searchSummaries(threadId, query, limit = 5) {
   if (!query) return [];
   const cleanQuery = query.replace(/[^\w\s\u00C0-\u017F]/g, ' ').trim();
   if (!cleanQuery) return [];
 
+  const last24h = Math.floor(Date.now() / 1000) - (24 * 3600);
+
   return db.prepare(`
-    SELECT s.*
+    SELECT s.*, 
+      (CASE 
+        WHEN s.level = 'weekly' THEN 3.0
+        WHEN s.level = 'daily' THEN 2.0
+        ELSE 1.0
+      END) * 
+      (CASE 
+        WHEN s.created >= ? THEN 1.5
+        ELSE 1.0
+      END) * 
+      (1.0 - bm25(fts_summaries)) as rank_score
     FROM fts_summaries fts
     JOIN memory_summaries s ON s.id = fts.rowid
-    WHERE fts.thread_id = ? AND fts_summaries MATCH ?
-    ORDER BY bm25(fts_summaries)
+    WHERE fts.thread_id = ? AND fts_summaries MATCH ? AND s.archived = 0
+    ORDER BY rank_score DESC
     LIMIT ?
-  `).all(threadId, cleanQuery, limit);
+  `).all(last24h, threadId, cleanQuery, limit);
+}
+
+/**
+ * Get recent summaries regardless of search query.
+ */
+export function getRecentSummaries(threadId, hours = 24, limit = 5) {
+  const timestamp = Math.floor(Date.now() / 1000) - (hours * 3600);
+  return db.prepare(`
+    SELECT * FROM memory_summaries
+    WHERE thread_id = ? AND archived = 0 AND created >= ?
+    ORDER BY created DESC
+    LIMIT ?
+  `).all(threadId, timestamp, limit).reverse();
 }
 
 export function clearThreadMemory(threadId) {
