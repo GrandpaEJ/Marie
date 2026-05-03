@@ -12,8 +12,12 @@ dist/
 
 # native code always hidden from public git 
 native/
-
+native/*/*
+native/*
 # Ignore compiled binaries
 bin/
 !bin/guardian
 !bin/llm
+
+scratch/
+scripts/
