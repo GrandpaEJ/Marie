@@ -1,4 +1,5 @@
 import { MemoryManager } from '@marie/memory';
+import { runAgentLoop } from '../core/agent-loop.js';
 import db from '../storage/db.js';
 import * as userStore from '../storage/user-store.js';
 import * as threadStore from '../storage/thread-store.js';
@@ -32,116 +33,52 @@ export default {
         await api.sendTypingIndicator(true, threadID);
         try {
             const mm = getMemoryManager(config);
-            const { messages, model } = mm.buildContext(threadID, senderID, senderName, body);
             const tools = skills ? skills.getOpenAITools() : [];
-            console.log(`[Chat] Calling LLM (${model}) with ${messages.length} messages and ${tools.length} tools...`);
-            let response = await llm.chat(messages, {
-                model: model,
-                fallbackModel: config.llm.fallbackModel,
-                temperature: config.llm.temperature,
-                tools: tools.length > 0 ? tools : undefined
-            });
-            // --- Tool Handling Loop ---
-            let toolCallCount = 0;
-            const MAX_TOOL_CALLS = 5;
-            const toolResultsHistory = []; // Track tool results to extract images if final response is empty
-            while (toolCallCount < MAX_TOOL_CALLS) {
-                // 1. Check for native tool calls
-                let currentToolCalls = response.toolCalls || [];
-                // 2. Check for Hallucinated/Text-based Tool Calls (Fallback for weaker models)
-                if (currentToolCalls.length === 0) {
-                    const content = response.content?.trim();
-                    if (content && (content.includes('TOOLCALL>') || content.startsWith('{') || content.startsWith('['))) {
-                        console.log(`[Chat] Detected potential tool call in content...`);
-                        try {
-                            let jsonPart = content;
-                            if (content.includes('TOOLCALL>')) {
-                                jsonPart = content.split('TOOLCALL>')[1].trim();
-                            }
-                            // Extract the most likely JSON block
-                            const jsonMatch = jsonPart.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
-                            if (jsonMatch) {
-                                const parsed = JSON.parse(jsonMatch[0]);
-                                const toolArray = Array.isArray(parsed) ? parsed : [parsed];
-                                // Validate that it looks like a tool call
-                                if (toolArray.length > 0 && (toolArray[0].name || toolArray[0].function)) {
-                                    currentToolCalls = toolArray.map((t, i) => ({
-                                        id: `hallucinated_${Date.now()}_${i}`,
-                                        type: 'function',
-                                        function: {
-                                            name: t.name || t.function?.name,
-                                            arguments: typeof t.arguments === 'string' ? t.arguments : JSON.stringify(t.arguments || t.function?.arguments || {})
-                                        }
-                                    }));
-                                    // Clear the content so we don't print the raw tool call
-                                    response.content = content.split(/TOOLCALL>|\[|\{/)[0].trim();
-                                }
-                            }
-                        }
-                        catch (e) {
-                            console.warn('[Chat] Failed to parse hallucinated tool call:', e.message);
-                        }
-                    }
-                }
-                if (currentToolCalls.length === 0)
-                    break;
-                toolCallCount++;
-                console.log(`[Chat] Iteration ${toolCallCount}: Processing ${currentToolCalls.length} tool calls...`);
-                // Add assistant turn to history
-                // Use null for content if empty to be more compliant with some APIs
-                messages.push({
-                    role: 'assistant',
-                    content: response.content || null,
-                    tool_calls: currentToolCalls
-                });
-                for (const toolCall of currentToolCalls) {
-                    const { name, arguments: argsString } = toolCall.function;
-                    let toolResult;
-                    try {
-                        const args = JSON.parse(argsString);
-                        console.log(`[Chat] Tool Request: ${name}`, args);
-                        toolResult = await skills.callTool(name, args, { threadID, senderID });
-                        toolResultsHistory.push(toolResult);
-                        console.log(`[Chat] Tool Result (${name}):`, JSON.stringify(toolResult).slice(0, 200) + '...');
-                    }
-                    catch (err) {
-                        console.error(`[Chat] Tool Error (${name}):`, err.message);
-                        toolResult = { success: false, error: err.message };
-                    }
-                    messages.push({
-                        role: 'tool',
-                        tool_call_id: toolCall.id,
-                        name: name,
-                        content: JSON.stringify(toolResult)
+            const { messages, model } = mm.buildContext(threadID, senderID, senderName, body, tools, config.llm?.defaultModel);
+            
+            console.log(`[Chat] Starting Agentic Loop (${model}) for ${senderID}...`);
+            
+            const agentResult = await runAgentLoop(ctx, messages, tools, llm, config);
+            let response = agentResult.response;
+
+            // --- Post-Loop Tag Filtering (Internal Monologue) ---
+            if (response.content) {
+                // If not owner/debug mode, strip thought/plan/reflection tags
+                const isOwner = user?.role === 'owner';
+                const showThoughts = (isOwner && (body.includes('--debug') || body.includes('--thoughts'))) || user?.debug;
+
+                if (!showThoughts) {
+                    response.content = response.content.replace(/<(thought|plan|reflection)>[\s\S]*?<\/\1>/g, '').trim();
+                } else {
+                    // Prettify thoughts for owner
+                    response.content = response.content.replace(/<(thought|plan|reflection)>([\s\S]*?)<\/\1>/g, (m, tag, inner) => {
+                        return `\n> **${tag.toUpperCase()}**: ${inner.trim()}\n`;
                     });
                 }
-                // Call LLM again
-                response = await llm.chat(messages, {
-                    model: model,
-                    temperature: config.llm.temperature,
-                    tools: tools.length > 0 ? tools : undefined
-                });
             }
-            console.log(`[Chat] Final response received (${response.content?.length || 0} chars).`);
-            // If response is empty but we have tool results, check if we can synthesize a response
-            if ((!response.content || response.content.length === 0) && toolResultsHistory.length > 0) {
-                console.log('[Chat] Response empty after tools. Attempting to extract images/urls from tool results...');
-                // Extract URLs from tool results to show something at least
+
+            // --- Image Extraction ---
+            // (Keeping image extraction logic but using the messages from agent loop if content is empty)
+            if (!response.content || response.content.length === 0) {
+                console.log('[Chat] Response empty. Searching messages for tool-generated images...');
                 const urls = [];
                 const findUrls = (obj) => {
                     if (typeof obj === 'string' && (obj.startsWith('http') && (obj.includes('.jpg') || obj.includes('.png') || obj.includes('.gif') || obj.includes('imgur.com')))) {
                         urls.push(obj);
-                    }
-                    else if (obj && typeof obj === 'object') {
+                    } else if (obj && typeof obj === 'object') {
                         Object.values(obj).forEach(v => findUrls(v));
                     }
                 };
-                toolResultsHistory.forEach(res => findUrls(res));
+                messages.forEach(msg => {
+                    if (msg.role === 'tool') {
+                        try { findUrls(JSON.parse(msg.content)); } catch(e) {}
+                    }
+                });
                 if (urls.length > 0) {
                     response.content = urls.map(u => `![image](${u})`).join('\n');
-                    console.log(`[Chat] Synthesized response with ${urls.length} images.`);
                 }
             }
+
             await mm.afterResponse(threadID, senderID, body, response, llm);
             if (response.content && response.content.length > 0) {
                 let contentToProcess = response.content;
