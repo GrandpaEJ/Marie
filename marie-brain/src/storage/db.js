@@ -59,6 +59,8 @@ db.exec(`
     fact_value TEXT NOT NULL,
     confidence REAL DEFAULT 1.0,
     source_thread TEXT,
+    expiry    INTEGER, -- Timestamp when fact expires
+    superseded_by INTEGER, -- ID of the fact that replaced this one
     created   INTEGER DEFAULT (unixepoch()),
     updated   INTEGER DEFAULT (unixepoch()),
     UNIQUE(uid, category, fact_key)
@@ -73,6 +75,8 @@ db.exec(`
     from_timestamp INTEGER NOT NULL,
     to_timestamp   INTEGER NOT NULL,
     msg_count      INTEGER DEFAULT 0,
+    level          TEXT DEFAULT 'conversation' CHECK(level IN ('conversation','daily','weekly')),
+    archived       INTEGER DEFAULT 0,
     created        INTEGER DEFAULT (unixepoch()),
     FOREIGN KEY (thread_id) REFERENCES threads(thread_id)
   );
@@ -125,7 +129,20 @@ db.exec(`
     cost_usd     REAL DEFAULT 0,
     timestamp    INTEGER DEFAULT (unixepoch())
   );
-  CREATE INDEX IF NOT EXISTS idx_usage_thread ON token_usage(thread_id);
   CREATE INDEX IF NOT EXISTS idx_usage_uid ON token_usage(uid);
+  
+  -- Session Management
+  CREATE TABLE IF NOT EXISTS sessions (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    thread_id     TEXT NOT NULL,
+    start_time    INTEGER DEFAULT (unixepoch()),
+    last_active   INTEGER DEFAULT (unixepoch()),
+    msg_count     INTEGER DEFAULT 0,
+    summary       TEXT,
+    metadata      TEXT, -- JSON string
+    is_active     INTEGER DEFAULT 1,
+    FOREIGN KEY (thread_id) REFERENCES threads(thread_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_sessions_thread ON sessions(thread_id, is_active);
 `);
 export default db;
