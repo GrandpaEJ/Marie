@@ -34,7 +34,7 @@ export class SkillManager {
     try {
       const files = await fs.readdir(directoryPath);
       for (const file of files) {
-        if (file.endsWith('.js') && !file.endsWith('.d.ts')) {
+        if ((file.endsWith('.js') || file.endsWith('.ts')) && !file.endsWith('.d.ts')) {
           console.log(`[SkillManager] Importing tool: ${file}`);
           const toolModule = await import(pathToFileURL(path.join(directoryPath, file)).href);
           const tool = toolModule.default || toolModule;
@@ -79,6 +79,25 @@ export class SkillManager {
     }
 
     return await tool.handler(validatedArgs, context);
+  }
+
+  /**
+   * Unregisters a tool.
+   */
+  unregister(name: string) {
+    this.tools.delete(name.toLowerCase());
+  }
+
+  /**
+   * Hot-reloads a tool by re-importing the file.
+   */
+  async hotReload(name: string, filePath: string) {
+    this.unregister(name);
+    const toolModule = await import(pathToFileURL(filePath).href + '?update=' + Date.now());
+    const tool = toolModule.default || toolModule;
+    if (tool && tool.name && tool.handler) {
+      this.register(tool);
+    }
   }
 
   /**
