@@ -29,8 +29,78 @@ export default {
         const { api, event, llm, config, user, skills } = ctx;
         const { threadID, senderID, body, messageID } = event;
         const senderName = user?.name || event.senderName || null;
-        console.log(`[Chat] Incoming message from ${senderID}: ${body}`);
         await api.sendTypingIndicator(true, threadID);
+        
+        // --- Quick Fix: Direct Image Keyword Detection ---
+        const imageKeywords = ['img', 'image', 'neko', 'draw', 'picture', 'photo', 'waifu', 'kitsune', 'shinobu', 'megumin', 'maid', 'marin', 'raiden', 'oppai', 'selfies', 'uniform', 'hentai', 'lewd', 'ero', 'ass', 'milf', 'paizuri', 'ecchi'];
+        const lowerBody = body.toLowerCase();
+        if (imageKeywords.some(kw => lowerBody.includes(kw)) && lowerBody.length < 100) {
+          console.log(`[Chat] Quick image fix triggered for: ${body}`);
+          
+          const isNsfwRequested = lowerBody.includes('nsfw') || lowerBody.includes('hentai') || lowerBody.includes('lewd') || lowerBody.includes('ero') || lowerBody.includes('ass') || lowerBody.includes('milf') || lowerBody.includes('paizuri') || lowerBody.includes('ecchi');
+          const nsfwAllowed = config.anime?.nsfwAllowed || config.anime?.nsfwThreads?.includes(threadID);
+          
+          if (isNsfwRequested && !nsfwAllowed) {
+            await api.sendTypingIndicator(false, threadID);
+            await api.sendMessage("🌸 **Gomen!** I can't send NSFW content in this thread. Please keep it wholesome! 🌸", threadID, messageID);
+            return;
+          }
+
+          let imageUrl = '';
+          
+          // Determine Category/Tag
+          const tags = ['maid', 'waifu', 'marin-kitagawa', 'mori-calliope', 'raiden-shogun', 'oppai', 'selfies', 'uniform', 'kamisato-ayaka', 'hentai', 'ero', 'ass', 'milf', 'oral', 'paizuri', 'ecchi'];
+          let category = 'neko';
+          for (const tag of tags) {
+            if (lowerBody.includes(tag.split('-')[0])) {
+              category = tag;
+              break;
+            }
+          }
+          if (lowerBody.includes('neko')) category = 'neko';
+          if (lowerBody.includes('kitsune')) category = 'kitsune';
+          if (lowerBody.includes('shinobu')) category = 'shinobu';
+          if (lowerBody.includes('megumin')) category = 'megumin';
+
+          try {
+            if (isNsfwRequested) {
+              // Try waifu.im for NSFW
+              const res = await fetch(`https://api.waifu.im/search?included_tags=${category}&is_nsfw=true`);
+              const data = await res.json();
+              if (data.images?.[0]?.url) {
+                imageUrl = data.images[0].url;
+              } else {
+                const res2 = await fetch(`https://api.waifu.pics/nsfw/${category === 'neko' ? 'neko' : 'waifu'}`);
+                const data2 = await res2.json();
+                imageUrl = data2.url;
+              }
+            } else {
+              // SFW: Try Waifu.im for specific tags first
+              const waifuImTags = ['maid', 'waifu', 'marin-kitagawa', 'mori-calliope', 'raiden-shogun', 'oppai', 'selfies', 'uniform', 'kamisato-ayaka'];
+              if (waifuImTags.includes(category)) {
+                const res = await fetch(`https://api.waifu.im/search?included_tags=${category}`);
+                const data = await res.json();
+                imageUrl = data.images[0].url;
+              } else {
+                const res = await fetch(`https://nekos.best/api/v2/${category}`);
+                const data = await res.json();
+                imageUrl = data.results[0].url;
+              }
+            }
+          } catch (e) {
+            // Fallback to pollinations
+            const prompt = isNsfwRequested ? `nsfw anime ${body}` : body;
+            imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+          }
+          
+          await api.sendTypingIndicator(false, threadID);
+          await api.sendMessage({
+            body: `🌸 **Waku waku!** Here is the ${isNsfwRequested ? 'lewd ' : ''}${category} you wanted:`,
+            attachment: [imageUrl]
+          }, threadID, messageID);
+          return;
+        }
+
         try {
             const mm = getMemoryManager(config);
             const tools = skills ? skills.getOpenAITools() : [];

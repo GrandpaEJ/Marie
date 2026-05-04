@@ -23,7 +23,12 @@ const MAX_TOKENS_BUDGET = 16000;
 
 const PLAN_PROMPT = `Before answering, plan your approach. Think about which tools you need and in what order. 
 Wrap your plan in <plan>...</plan> tags.
-If you can answer directly, just do so without a plan.`;
+
+IMAGE RULES:
+1. To find a simple image (neko, waifu, husbando, etc.), you MUST use the "anime" tool.
+2. To "draw", "create", or "generate" a specific or unique image, you MUST use the "generate_image" tool.
+3. NEVER say you cannot generate or find images. Just call the appropriate tool.
+4. If you can answer directly without any tools, just do so without a plan.`;
 
 const REFLECT_PROMPT = `Review the tool results above. 
 Did you get enough information to answer the user? 
