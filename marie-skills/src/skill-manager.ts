@@ -6,6 +6,10 @@ import { pathToFileURL } from 'url';
 export interface ToolDefinition {
   name: string;
   description: string;
+  category?: string;
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  detailedDescription?: string;
+  examples?: Array<{ input: any; explanation?: string }>;
   schema?: z.ZodObject<any>;
   parameters: any;
   handler: (params: any, context?: any) => Promise<any>;
@@ -70,6 +74,25 @@ export class SkillManager {
     const tool = this.tools.get(name.toLowerCase());
     if (!tool) {
       throw new Error(`Tool not found: ${name}`);
+    }
+
+    // 0. Risk-Based Access Control (RBAC)
+    let risk = tool.riskLevel || 'low';
+    const userRole = context.user?.role || 'user';
+    
+    // Allow overrides from config
+    if (context.config?.toolRiskOverrides?.[name]) {
+      risk = context.config.toolRiskOverrides[name];
+    }
+
+    if (risk === 'critical' || risk === 'high') {
+      if (userRole !== 'owner') {
+        throw new Error(`Permission Denied: Tool "${name}" is classified as ${risk} risk and requires OWNER role.`);
+      }
+    } else if (risk === 'medium') {
+      if (userRole !== 'owner' && userRole !== 'admin') {
+        throw new Error(`Permission Denied: Tool "${name}" is classified as medium risk and requires ADMIN role.`);
+      }
     }
 
     // Validate with Zod if schema exists
