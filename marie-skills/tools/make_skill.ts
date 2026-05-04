@@ -7,7 +7,9 @@ import { z } from 'zod';
  */
 export default {
   name: 'make_skill',
-  description: 'Create a new dynamic skill for Marie. Provide the name, description, parameters schema (OpenAI format), and JS logic.',
+  description: 'Create a new dynamic skill for Marie. Use for adding new capabilities.',
+  category: 'meta',
+  riskLevel: 'high',
   schema: z.object({
     name: z.string().regex(/^[a-z_]+$/).max(30).describe('Lowercase name with underscores (e.g., weather_checker)'),
     description: z.string().describe('Clear description of what the tool does'),
