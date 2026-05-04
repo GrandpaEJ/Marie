@@ -196,6 +196,21 @@ async function start() {
         });
 
         logger.success("Connected to Telegram.");
+
+        // --- Milestone 5: Handle Post-Restart Recovery ---
+        const restartStatePath = path.join(ROOT_DIR, 'data', 'restart_state.json');
+        if (fs.existsSync(restartStatePath)) {
+          try {
+            const state = JSON.parse(fs.readFileSync(restartStatePath, 'utf8'));
+            setTimeout(async () => {
+              logger.info(`[SelfRestart] Resuming conversation in thread ${state.threadID}...`);
+              await platform.sendMessage("✅ **Back online!** System successfully restarted. How can I help you now?", state.threadID);
+              fs.unlinkSync(restartStatePath);
+            }, 2000);
+          } catch (e) {
+            logger.error("[SelfRestart] Failed to resume restart state:", e.message);
+          }
+        }
       }
     }
 
@@ -224,6 +239,22 @@ async function start() {
         processedMessages.set(msgID, true);
         await next();
       });
+
+      brain.use(async (ctx, next) => {
+        try {
+          await next();
+          const { health } = await import('@marie/brain');
+          if (health) health.logSuccess();
+        } catch (e) {
+          const { health } = await import('@marie/brain');
+          if (health) health.logError();
+          throw e;
+        }
+      });
+
+      const { sanitizer, outputGuard } = await import('@marie/brain');
+      if (outputGuard) brain.use(outputGuard);
+      if (sanitizer) brain.use(sanitizer);
 
       brain.use(brain.builtins.userFetcher);
       brain.use(rbac(userStore));
