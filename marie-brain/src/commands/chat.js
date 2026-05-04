@@ -158,16 +158,15 @@ export default {
         catch (error) {
             console.error("Chat handler error:", error);
             try {
-                // Mask sensitive info like API keys in error message
-                let errMsg = error.message;
-                
-                // Mask OpenRouter/OpenAI keys
-                errMsg = errMsg.replace(/sk-[a-zA-Z0-8]{20,}/g, 'sk-***');
-                
-                // Truncate error message to avoid MESSAGE_TOO_LONG
-                const finalMsg = errMsg.length > 500 ? errMsg.slice(0, 500) + "..." : errMsg;
-                
-                await api.sendMessage(`[Marie] Chat error: ${finalMsg}`, threadID);
+                let friendlyMsg = "⚠️ **Oops! Something went wrong.**\nI encountered a technical hiccup while processing your request. Please try again in a moment.";
+
+                if (error.message.includes('all providers in fallback chain failed') || error.message.includes('502') || error.message.includes('429')) {
+                    friendlyMsg = "🧠 **Marie's brain is a bit tired right now.**\nAll my AI providers are currently busy or unavailable. I'll be back to normal once they've had a rest! 🌸";
+                } else if (error.message.includes('timeout')) {
+                    friendlyMsg = "⏱️ **Request timed out.**\nIt took too long to think of a response. Maybe try a simpler question? 🌸";
+                }
+
+                await api.sendMessage(friendlyMsg, threadID, messageID);
             } catch (err) {
                 console.error("Failed to send error message to Telegram:", err.message);
             }
