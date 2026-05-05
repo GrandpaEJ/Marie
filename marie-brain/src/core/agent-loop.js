@@ -21,14 +21,14 @@ export const AgentState = {
 const MAX_ITERATIONS = 8;
 const MAX_TOKENS_BUDGET = 16000;
 
-const PLAN_PROMPT = `Before answering, plan your approach. Think about which tools you need and in what order. 
-Wrap your plan in <plan>...</plan> tags.
+const PLAN_PROMPT = `Analyze the user request and plan your approach ONLY when necessary (e.g., for complex tasks or tool usage). 
+If you need to plan, wrap your reasoning in <thought>...</thought> tags.
+If you can answer directly without any tools or complex reasoning, just do so naturally without a thought block.
 
 IMAGE RULES:
-1. To find a simple image (neko, waifu, husbando, etc.), you MUST use the "anime" tool.
-2. To "draw", "create", or "generate" a specific or unique image, you MUST use the "generate_image" tool.
-3. NEVER say you cannot generate or find images. Just call the appropriate tool.
-4. If you can answer directly without any tools, just do so without a plan.`;
+1. To generate or "draw" a specific image, use the [GENERATE_IMAGE: prompt] tag.
+2. If the user asks for a simple anime image, you can use the [RUN_TOOL: anime] tag.
+3. NEVER say you cannot generate or find images. Just use the appropriate action tag.`;
 
 const REFLECT_PROMPT = `Review the tool results above. 
 Did you get enough information to answer the user? 

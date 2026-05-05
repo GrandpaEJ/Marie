@@ -117,6 +117,7 @@ export class Brain {
                         }
                         catch (_0xerr) {
                             console.error(_0x2f1a('48616e646c655265706c79206572726f723a'), _0xerr);
+                            return; // STOP HERE
                         }
                     }
                 }
@@ -139,6 +140,8 @@ export class Brain {
                 }
                 catch (_0xerr) {
                     console.error(_0x2f1a('436f6d6d616e64206572726f723a'), _0xerr);
+                    // Even if command fails, we matched it, so we don't fall back to chat
+                    return;
                 }
             }
             await next();

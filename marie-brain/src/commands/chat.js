@@ -29,7 +29,16 @@ export default {
         const { api, event, llm, config, user, skills } = ctx;
         const { threadID, senderID, body, messageID } = event;
         const senderName = user?.name || event.senderName || null;
-        await api.sendTypingIndicator(true, threadID);
+
+        // --- Smart Typing Indicator ---
+        let isTyping = true;
+        const typingLoop = async () => {
+          while (isTyping) {
+            try { await api.sendTypingIndicator(true, threadID); } catch (e) {}
+            await new Promise(r => setTimeout(r, 4000));
+          }
+        };
+        typingLoop();
         
         // --- Quick Fix: Explicit image command only (avoid keyword-based auto-images) ---
         const lowerBody = body.toLowerCase();
@@ -42,6 +51,7 @@ export default {
           const nsfwAllowed = config.anime?.nsfwAllowed || config.anime?.nsfwThreads?.includes(threadID);
           
           if (isNsfwRequested && !nsfwAllowed) {
+            isTyping = false;
             await api.sendTypingIndicator(false, threadID);
             await api.sendMessage("🌸 **Gomen!** I can't send NSFW content in this thread. Please keep it wholesome! 🌸", threadID, messageID);
             return;
@@ -95,6 +105,7 @@ export default {
             imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
           }
           
+          isTyping = false;
           await api.sendTypingIndicator(false, threadID);
           await api.sendMessage({
             body: `🌸 **Waku waku!** Here is the ${isNsfwRequested ? 'lewd ' : ''}${category} you wanted:`,
@@ -111,6 +122,7 @@ export default {
             console.log(`[Chat] Starting Agentic Loop (${model}) for ${senderID}...`);
             
             const agentResult = await runAgentLoop(ctx, messages, tools, llm, config);
+            isTyping = false; // Stop typing after loop
             let response = agentResult.response;
 
             // --- Post-Loop Tag Filtering (Internal Monologue) ---
@@ -228,6 +240,7 @@ export default {
             }
         }
         catch (error) {
+            isTyping = false;
             console.error("Chat handler error:", error);
             try {
                 let friendlyMsg = "⚠️ **Oops! Something went wrong.**\nI encountered a technical hiccup while processing your request. Please try again in a moment.";
@@ -244,6 +257,7 @@ export default {
             }
         }
         finally {
+            isTyping = false;
             await api.sendTypingIndicator(false, threadID);
         }
     }

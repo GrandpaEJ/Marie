@@ -100,21 +100,29 @@ db.exec(`
   );
 
   -- Triggers to keep FTS in sync
-  CREATE TRIGGER IF NOT EXISTS trg_facts_insert AFTER INSERT ON memory_facts BEGIN
+  DROP TRIGGER IF EXISTS trg_facts_insert;
+  CREATE TRIGGER trg_facts_insert AFTER INSERT ON memory_facts BEGIN
     INSERT INTO fts_facts(rowid, uid, category, fact_key, fact_value) VALUES (new.id, new.uid, new.category, new.fact_key, new.fact_value);
   END;
-  CREATE TRIGGER IF NOT EXISTS trg_facts_delete AFTER DELETE ON memory_facts BEGIN
+
+  DROP TRIGGER IF EXISTS trg_facts_delete;
+  CREATE TRIGGER trg_facts_delete AFTER DELETE ON memory_facts BEGIN
     INSERT INTO fts_facts(fts_facts, rowid, uid, category, fact_key, fact_value) VALUES('delete', old.id, old.uid, old.category, old.fact_key, old.fact_value);
   END;
-  CREATE TRIGGER IF NOT EXISTS trg_facts_update AFTER UPDATE ON memory_facts BEGIN
+
+  DROP TRIGGER IF EXISTS trg_facts_update;
+  CREATE TRIGGER trg_facts_update AFTER UPDATE ON memory_facts BEGIN
     INSERT INTO fts_facts(fts_facts, rowid, uid, category, fact_key, fact_value) VALUES('delete', old.id, old.uid, old.category, old.fact_key, old.fact_value);
     INSERT INTO fts_facts(rowid, uid, category, fact_key, fact_value) VALUES (new.id, new.uid, new.category, new.fact_key, new.fact_value);
   END;
 
-  CREATE TRIGGER IF NOT EXISTS trg_summaries_insert AFTER INSERT ON memory_summaries BEGIN
+  DROP TRIGGER IF EXISTS trg_summaries_insert;
+  CREATE TRIGGER trg_summaries_insert AFTER INSERT ON memory_summaries BEGIN
     INSERT INTO fts_summaries(rowid, thread_id, summary) VALUES (new.id, new.thread_id, new.summary);
   END;
-  CREATE TRIGGER IF NOT EXISTS trg_summaries_delete AFTER DELETE ON memory_summaries BEGIN
+
+  DROP TRIGGER IF EXISTS trg_summaries_delete;
+  CREATE TRIGGER trg_summaries_delete AFTER DELETE ON memory_summaries BEGIN
     INSERT INTO fts_summaries(fts_summaries, rowid, thread_id, summary) VALUES('delete', old.id, old.thread_id, old.summary);
   END;
 
