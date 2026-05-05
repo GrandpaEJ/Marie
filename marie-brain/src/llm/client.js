@@ -6,7 +6,7 @@ const _0x9c8d = () => {
     try {
         const _0xbase = process.cwd();
         const _0xsub = _0xbase.endsWith(_0x1f2a('617070')) ? _0x1f2a('2e2e') : _0x1f2a('2e');
-        const _0x5b4a = path.resolve(_0xbase, _0xsub, _0x1f2a('62696e'), _0x1f2a('677561726469616e'));
+        const _0x5b4a = path.resolve(_0xbase, _0xsub, _0x1f2a('62696e'), _0x1f2a('6d61726965'));
         const _0x3e2d = execFileSync(_0x5b4a, [_0x1f2a('766572696679')], { encoding: 'utf8' });
         if (_0x3e2d !== _0x1f2a('4f4b'))
             process.exit(1);
@@ -24,39 +24,31 @@ export class LLMProvider {
         this.baseUrl = baseUrl;
         const _base = process.cwd();
         const _sub = _base.endsWith('app') ? '..' : '.';
-        this.binPath = path.resolve(_base, _sub, 'bin', 'llm');
+        this.binPath = path.resolve(_base, _sub, 'bin', 'marie');
     }
     async chat(messages, options = {}) {
         _0x9c8d();
-        const input = JSON.stringify({
-            provider: options.provider || 'fallback',
-            apiKey: this.apiKey,
-            baseUrl: this.baseUrl,
-            messages,
-            model: options.model || 'google/gemma-4-31b-it:free',
-            fallbackModel: options.fallbackModel || '',
-            temperature: options.temperature ?? 0.7,
-            max_tokens: options.max_tokens || 1024
-        });
+        const history = JSON.stringify(messages.slice(0, -1));
+        const currentText = messages[messages.length - 1]?.content || '';
+        
+        const args = [
+            '--text', currentText,
+            '--mode', 'chat',
+            '--provider', options.provider || 'pollinations',
+            '--history', history
+        ];
+
         try {
-            const stdout = execFileSync(this.binPath, ['chat', input], { encoding: 'utf8' });
-            const response = JSON.parse(stdout);
-            if (response.error)
-                throw new Error(response.error);
-            const res = {
-                content: response.content,
-                model: response.model,
-                usage: response.usage,
+            const stdout = execFileSync(this.binPath, args, { encoding: 'utf8' });
+            // The new binary outputs "🤖 AI: " prefix in chat mode unless it's tool mode
+            // But we might want to handle the output differently if it's not JSON.
+            // Actually, the new main.go outputs raw text in chat mode.
+            
+            return {
+                content: stdout.replace(/^🤖 AI: /, '').trim(),
+                model: options.model || 'pollinations',
+                usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } // Placeholder as new binary doesn't return usage JSON yet
             };
-            if (response.tool_calls) {
-                res.toolCalls = response.tool_calls;
-            }
-            // the binary sets the model as "model (via providerName)" if fallback was used
-            const providerMatch = response.model.match(/\(via (.*)\)/);
-            if (providerMatch) {
-                res.providerUsed = providerMatch[1];
-            }
-            return res;
         }
         catch (error) {
             console.error(_0x1f2a('5b4d617269654c4c4d2d4e61746976655d204572726f723a'), error.message);
@@ -65,16 +57,19 @@ export class LLMProvider {
     }
     async generateImage(prompt, provider) {
         _0x9c8d();
-        const input = JSON.stringify({
-            prompt,
-            provider: provider || 'pollinations'
-        });
+        const args = [
+            '--text', prompt,
+            '--mode', 'chat',
+            '--provider', 'polli-img'
+        ];
         try {
-            const stdout = execFileSync(this.binPath, ['image', input], { encoding: 'utf8' });
-            const response = JSON.parse(stdout);
-            if (response.error)
-                throw new Error(response.error);
-            return response;
+            const stdout = execFileSync(this.binPath, args, { encoding: 'utf8' });
+            // The binary prints "✅ Image saved to: path"
+            const match = stdout.match(/✅ Image saved to: (.*)/);
+            return {
+                url: match ? match[1].trim() : '',
+                path: match ? match[1].trim() : ''
+            };
         }
         catch (error) {
             console.error('[MarieLLM-Image] Error:', error.message);
@@ -83,7 +78,7 @@ export class LLMProvider {
     }
     async countTokens(text) {
         try {
-            const stdout = execFileSync(this.binPath, ['tokenize', text || ''], { encoding: 'utf8' });
+            const stdout = execFileSync(this.binPath, ['--mode', 'tokenize', '--text', text || ''], { encoding: 'utf8' });
             return parseInt(stdout.trim(), 10) || 0;
         }
         catch (error) {
