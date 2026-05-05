@@ -31,11 +31,12 @@ export default {
         const senderName = user?.name || event.senderName || null;
         await api.sendTypingIndicator(true, threadID);
         
-        // --- Quick Fix: Direct Image Keyword Detection ---
-        const imageKeywords = ['img', 'image', 'neko', 'draw', 'picture', 'photo', 'waifu', 'kitsune', 'shinobu', 'megumin', 'maid', 'marin', 'raiden', 'oppai', 'selfies', 'uniform', 'hentai', 'lewd', 'ero', 'ass', 'milf', 'paizuri', 'ecchi'];
+        // --- Quick Fix: Explicit image command only (avoid keyword-based auto-images) ---
         const lowerBody = body.toLowerCase();
-        if (imageKeywords.some(kw => lowerBody.includes(kw)) && lowerBody.length < 100) {
-          console.log(`[Chat] Quick image fix triggered for: ${body}`);
+        const imageCommandMatch = lowerBody.match(/^\s*[./](img|image)\b\s*(.*)$/);
+        if (imageCommandMatch && lowerBody.length < 200) {
+          console.log(`[Chat] Image command triggered: ${body}`);
+          const requestedText = (imageCommandMatch[2] || '').trim();
           
           const isNsfwRequested = lowerBody.includes('nsfw') || lowerBody.includes('hentai') || lowerBody.includes('lewd') || lowerBody.includes('ero') || lowerBody.includes('ass') || lowerBody.includes('milf') || lowerBody.includes('paizuri') || lowerBody.includes('ecchi');
           const nsfwAllowed = config.anime?.nsfwAllowed || config.anime?.nsfwThreads?.includes(threadID);
@@ -89,7 +90,8 @@ export default {
             }
           } catch (e) {
             // Fallback to pollinations
-            const prompt = isNsfwRequested ? `nsfw anime ${body}` : body;
+            const promptBase = requestedText.length > 0 ? requestedText : body;
+            const prompt = isNsfwRequested ? `nsfw anime ${promptBase}` : promptBase;
             imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
           }
           
