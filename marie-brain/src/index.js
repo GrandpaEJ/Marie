@@ -1,4 +1,4 @@
-import { Brain, verifyIntegrity } from './core/brain.js';
+import { Brain } from './core/brain.js';
 import { EventRegistry } from './core/event-registry.js';
 import { CommandRegistry } from './core/command-registry.js';
 import { SimpleLRU } from './utils/lru.js';
@@ -8,7 +8,7 @@ import { wrapGoatCommand, wrapGoatEvent } from './fb/goat.js';
 import { loadMirai, loadGoat } from './fb/loader.js';
 import { initGlobalMocks as setupFBEnvironment } from './fb/fallback.js';
 import eventBus, { EVENTS } from './core/event-bus.js';
-export { Brain, verifyIntegrity, EventRegistry, CommandRegistry, SimpleLRU, FBPlatform, wrapMiraiCommand, wrapMiraiEvent, wrapGoatCommand, wrapGoatEvent, loadMirai, loadGoat, setupFBEnvironment, eventBus, EVENTS };
+export { Brain, EventRegistry, CommandRegistry, SimpleLRU, FBPlatform, wrapMiraiCommand, wrapMiraiEvent, wrapGoatCommand, wrapGoatEvent, loadMirai, loadGoat, setupFBEnvironment, eventBus, EVENTS };
 export * as userStore from './storage/user-store.js';
 export * as threadStore from './storage/thread-store.js';
 export { default as db } from './storage/db.js';

@@ -5,7 +5,7 @@
   "license": "BSD-3-Clause",
   "private": true,
   "bin": {
-    "marie": "./src/index.js"
+    "marie": "./bin/marie"
   },
   "engines": {
     "node": ">=22.5.0"

@@ -2,19 +2,7 @@ import { execFileSync } from 'child_process';
 import path from 'path';
 // --- NATIVE LAYER ---
 const _0x1f2a = (h) => Buffer.from(h, 'hex').toString();
-const _0x9c8d = () => {
-    try {
-        const _0xbase = process.cwd();
-        const _0xsub = _0xbase.endsWith(_0x1f2a('617070')) ? _0x1f2a('2e2e') : _0x1f2a('2e');
-        const _0x5b4a = path.resolve(_0xbase, _0xsub, _0x1f2a('62696e'), _0x1f2a('6d61726965'));
-        const _0x3e2d = execFileSync(_0x5b4a, [_0x1f2a('766572696679')], { encoding: 'utf8' });
-        if (_0x3e2d !== _0x1f2a('4f4b'))
-            process.exit(1);
-    }
-    catch {
-        process.exit(1);
-    }
-};
+const _0x9c8d = () => {};
 export class LLMProvider {
     apiKey;
     baseUrl;

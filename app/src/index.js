@@ -25,8 +25,7 @@ import {
   db,
   LLMProvider,
   rbac,
-  ensureBinaries,
-  verifyIntegrity
+  ensureBinaries
 } from '@marie/brain';
 import { SkillManager } from '@marie/skills';
 import { fileURLToPath } from 'url';

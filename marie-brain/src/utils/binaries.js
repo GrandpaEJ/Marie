@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import logger from './logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = 'GrandpaEJ/Marie';
-const BINARIES = Object.freeze(['guardian', 'llm']);
+const BINARIES = Object.freeze(['marie']);
 /**
  * Ensures native binaries are present for the current architecture.
  * @returns {Promise<void>}

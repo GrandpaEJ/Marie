@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "bin": {
-    "marie": "./src/index.js"
+    "marie": "../bin/marie"
   },
   "scripts": {
     "start": "node src/index.js"

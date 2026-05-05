@@ -3,10 +3,7 @@ import eventBus, { EVENTS } from './event-bus.js';
 import { SimpleLRU } from '../utils/lru.js';
 // --- NATIVE LAYER ---
 const _0x2f1a = (h) => Buffer.from(h, 'hex').toString();
-export const verifyIntegrity = () => {
-    // Integrity check disabled 
-    return true;
-};
+// Integrity check removed
 export class Brain {
     platform;
     registry;
